@@ -88,8 +88,8 @@ func (sg *ServerGroup) Serve() error {
 		}(si.s, idx)
 	}
 	go sg.waitAll()
-	sg.reportState(StateRunning)
 	atomic.StoreInt32(&sg.state, StateRunning)
+	sg.reportState(StateRunning)
 	return <-sg.resChan
 }
 

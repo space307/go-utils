@@ -3,6 +3,8 @@
 2. [grace.go](#grace)
 3. [ticker.go](#ticker)
 4. [config.go](#utils)
+5. [api.go](#api)
+5. [server_group.go](#sg)
 
 <a name="debug" />
 
@@ -29,5 +31,13 @@ Wrap over standard time
 
 A set of basic utilities for working with config files
 
+<a name="api" />
 
+### 4. api
+
+A simple REST API server based on gorilla mux, go-kit handlers, and a standard http.Server.
+
+### 4. sg
+
+ServerGroup allows to start several sg.Server objects and stop them, tracking errors.
 
