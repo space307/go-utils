@@ -1,10 +1,14 @@
+## Go-Utils. Reusable GoLang utils.
+
+[![Build Status](https://travis-ci.org/space307/go-utils.svg?branch=master)](https://travis-ci.org/space307/go-utils)
+
 ### Table of Contents
 1. [debug.go](#debug)
 2. [grace.go](#grace)
 3. [ticker.go](#ticker)
-4. [config.go](#utils)
+4. [config.go](#config)
 5. [api.go](#api)
-5. [server_group.go](#sg)
+6. [server_group.go](#sg)
 
 <a name="debug" />
 
@@ -25,7 +29,7 @@ Package processes the low-level operating system call : syscall.SIGINT, syscall.
 Creates a new ticker, which sends current time to its channel every second, minute, or hour after the specified delay.
 Wrap over standard time
 
-<a name="utils" />
+<a name="config" />
 
 ### 4. config
 
@@ -33,11 +37,13 @@ A set of basic utilities for working with config files
 
 <a name="api" />
 
-### 4. api
+### 5. api
 
 A simple REST API server based on gorilla mux, go-kit handlers, and a standard http.Server.
 
-### 4. sg
+<a name="sg" />
+
+### 6. sg
 
 ServerGroup allows to start several sg.Server objects and stop them, tracking errors.
 
