@@ -26,6 +26,7 @@ func NewErrorWithCode(message string, code int) *ErrorWithCode {
 	return &ErrorWithCode{message: message, code: code}
 }
 
+// NewErrorWithCodeResponse creates a new object with a message, code and response
 func NewErrorWithCodeResponse(message string, code int, resp interface{}) *ErrorWithCode {
 	return &ErrorWithCode{message: message, code: code, response: resp}
 }
@@ -40,6 +41,7 @@ func (e *ErrorWithCode) Error() string {
 	return e.message
 }
 
+// Error returns marshal response
 func (e *ErrorWithCode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.response)
 }
