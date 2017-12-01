@@ -106,3 +106,10 @@ func TestServer(t *testing.T) {
 		return
 	}
 }
+
+func TestNewErrorWithCode(t *testing.T) {
+	e := NewErrorWithCode("fatal_error", http.StatusOK)
+	res, err := e.MarshalJSON()
+	assert.NoError(t, err)
+	assert.Equal(t, []byte("null"), res)
+}
