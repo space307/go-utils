@@ -16,13 +16,18 @@ import (
 
 // ErrorWithCode contains a message and code, which will be used as a http response code.
 type ErrorWithCode struct {
-	code    int
-	message string
+	code     int
+	message  string
+	response interface{}
 }
 
 // NewErrorWithCode creates a new object with a message and code.
 func NewErrorWithCode(message string, code int) *ErrorWithCode {
 	return &ErrorWithCode{message: message, code: code}
+}
+
+func NewErrorWithCodeResponse(message string, code int, resp interface{}) *ErrorWithCode {
+	return &ErrorWithCode{message: message, code: code, response: resp}
 }
 
 // StatusCode returns error code.
@@ -33,6 +38,10 @@ func (e *ErrorWithCode) StatusCode() int {
 // Error returns error message.
 func (e *ErrorWithCode) Error() string {
 	return e.message
+}
+
+func (e *ErrorWithCode) MarshalJSON() ([]byte, error) {
+	return json.Marshal(e.response)
 }
 
 // PathInfo represents information about path, method, and request handlers to serve this path.
