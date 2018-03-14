@@ -9,6 +9,7 @@
 4. [config.go](#config)
 5. [api.go](#api)
 6. [server_group.go](#sg)
+6. [tracing.go](#tracing)
 
 <a name="debug" />
 
@@ -46,4 +47,10 @@ A simple REST API server based on gorilla mux, go-kit handlers, and a standard h
 ### 6. sg
 
 ServerGroup allows to start several sg.Server objects and stop them, tracking errors.
+
+<a name="tracing" />
+
+### 6. tracing
+
+HTTP client based on standart [net/http](https://golang.org/pkg/net/http/) client with additional method adding a Zipkin span to request.
 
