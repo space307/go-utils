@@ -67,6 +67,7 @@ func TestServer(t *testing.T) {
 		return
 	}
 	req := testRequest{Data: "req"}
+
 	data, err := json.Marshal(req)
 	if !a.NoError(err) {
 		return
