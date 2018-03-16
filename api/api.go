@@ -49,10 +49,12 @@ func (e *ErrorWithCode) MarshalJSON() ([]byte, error) {
 // PathInfo represents information about path, method, and request handlers to serve this path.
 type PathInfo struct {
 	Method string
+	Name   string
 	Path   string
 	E      endpoint.Endpoint
 	Dec    kit_http.DecodeRequestFunc
 	Enc    kit_http.EncodeResponseFunc
+	O      []kit_http.ServerOption
 }
 
 // Config used to pass settings and handlers to the server.
@@ -78,7 +80,7 @@ func (s *Server) Serve() error {
 	r := mux.NewRouter().StrictSlash(true)
 	router := r.PathPrefix(s.cfg.Prefix).Subrouter()
 	for _, s := range s.cfg.Handlers {
-		srv := kit_http.NewServer(s.E, s.Dec, s.Enc)
+		srv := kit_http.NewServer(s.E, s.Dec, s.Enc, s.O...)
 		router.Handle(s.Path, srv).Methods(s.Method)
 	}
 	s.server = &http.Server{
