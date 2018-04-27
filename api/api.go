@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -68,21 +69,19 @@ type Config struct {
 type Server struct {
 	cfg    *Config
 	server *http.Server
+	m      sync.RWMutex
 }
 
 // NewServer creates a new server object for the given config.
 func NewServer(cfg *Config) *Server {
-	return &Server{cfg: cfg}
-}
-
-// Serve launches processing loop.
-func (s *Server) Serve() error {
+	s := &Server{cfg: cfg}
 	r := mux.NewRouter().StrictSlash(true)
 	router := r.PathPrefix(s.cfg.Prefix).Subrouter()
 	for _, s := range s.cfg.Handlers {
 		srv := kit_http.NewServer(s.E, s.Dec, s.Enc, s.O...)
 		router.Handle(s.Path, srv).Methods(s.Method)
 	}
+	s.m.Lock()
 	s.server = &http.Server{
 		Addr:           s.cfg.Addr,
 		Handler:        r,
@@ -90,7 +89,17 @@ func (s *Server) Serve() error {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	err := s.server.ListenAndServe()
+	s.m.Unlock()
+
+	return s
+}
+
+// Serve launches processing loop.
+func (s *Server) Serve() error {
+	s.m.RLock()
+	srv := s.server
+	s.m.RUnlock()
+	err := srv.ListenAndServe()
 	if err == http.ErrServerClosed { // s.Stop() was called, not a error.
 		err = nil
 	}
@@ -99,12 +108,20 @@ func (s *Server) Serve() error {
 
 // Stop gracefully shutdowns http server.
 func (s *Server) Stop() error {
-	return s.server.Shutdown(context.TODO())
+	s.m.RLock()
+	srv := s.server
+	s.m.RUnlock()
+
+	return srv.Shutdown(context.TODO())
 }
 
 // StopNow immediately shutdowns http server.
 func (s *Server) StopNow() error {
-	return s.server.Close()
+	s.m.RLock()
+	srv := s.server
+	s.m.RUnlock()
+
+	return srv.Close()
 }
 
 // RequestVars returns request's path variables.
