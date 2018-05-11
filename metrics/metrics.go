@@ -23,24 +23,29 @@ var requestLatency = kitprometheus.NewHistogramFrom(prometheus.HistogramOpts{
 	Help: "Duration of requests in ms",
 }, []string{"method", "error"})
 
-type metricsStorage struct {
+type MetricsStorage struct {
 	requestCount   metrics.Counter
 	requestLatency metrics.Histogram
 }
 
-func NewMetrics() *metricsStorage {
-	return &metricsStorage{requestCount: requestCount, requestLatency: requestLatency}
+func NewMetrics() *MetricsStorage {
+	return &MetricsStorage{requestCount: requestCount, requestLatency: requestLatency}
 }
 
-func (ms *metricsStorage) counterAdd(labels []string) {
+func (ms *MetricsStorage) counterAdd(labels []string) {
 	ms.requestCount.With(labels...).Add(1)
 }
 
-func (ms *metricsStorage) latencyAdd(labels []string, begin time.Time) {
+func (ms *MetricsStorage) latencyAdd(labels []string, begin time.Time) {
 	ms.requestLatency.With(labels...).Observe(time.Since(begin).Seconds())
 }
 
-func MetricsDecodeWrapper(m *metricsStorage, method string, d httpgk.DecodeRequestFunc) httpgk.DecodeRequestFunc {
+func (ms *MetricsStorage) CounterSet(method string, count float64) {
+	labels := []string{`method`, method, `error`, `false`, `valid`, `true`}
+	ms.requestCount.With(labels...).Add(count)
+}
+
+func MetricsDecodeWrapper(m *MetricsStorage, method string, d httpgk.DecodeRequestFunc) httpgk.DecodeRequestFunc {
 	return func(ctx context.Context, request *http.Request) (i interface{}, err error) {
 		defer func(begin time.Time) {
 			if err != nil {
@@ -54,7 +59,7 @@ func MetricsDecodeWrapper(m *metricsStorage, method string, d httpgk.DecodeReque
 	}
 }
 
-func MetricsMiddleware(m *metricsStorage, method string) endpoint.Middleware {
+func MetricsMiddleware(m *MetricsStorage, method string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (i interface{}, err error) {
 			defer func(begin time.Time) {
