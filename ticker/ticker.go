@@ -83,7 +83,7 @@ func (ticker *TimeTicker) tick() {
 // less, then a second set to 0.
 // ex. 11:22:33.456 --> 11:22:33.000
 func TimeNoSecondFractions(t time.Time) time.Time {
-	return t.Add(-time.Nanosecond * time.Duration(t.Nanosecond()))
+	return time.Unix(t.Unix(), 0)
 }
 
 // TimeNoMinuteFractions returns the time with all time units
