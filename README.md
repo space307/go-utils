@@ -10,6 +10,7 @@
 5. [api.go](#api)
 6. [server_group.go](#sg)
 6. [tracing.go](#tracing)
+7. [checker.go](#checker)
 
 <a name="debug" />
 
@@ -54,3 +55,8 @@ ServerGroup allows to start several sg.Server objects and stop them, tracking er
 
 HTTP client based on standart [net/http](https://golang.org/pkg/net/http/) client with additional method adding a Zipkin span to request.
 
+<a name="checker" />
+
+### 7. checker
+
+Helper for execute series of tests

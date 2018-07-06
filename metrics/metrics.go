@@ -23,6 +23,23 @@ var requestLatency = kitprometheus.NewHistogramFrom(prometheus.HistogramOpts{
 	Help: "Duration of requests in ms",
 }, []string{"method", "error"})
 
+type aliveMetric struct {
+	aliveTime metrics.Gauge
+}
+
+func NewAliveMetric() *aliveMetric {
+	return &aliveMetric{
+		aliveTime: kitprometheus.NewGaugeFrom(prometheus.GaugeOpts{
+			Name: "heartbeat",
+			Help: "Unix time in seconds when this service was alive",
+		}, []string{}),
+	}
+}
+
+func (am *aliveMetric) Update() {
+	am.aliveTime.Set(float64(time.Now().Unix()))
+}
+
 type MetricsStorage struct {
 	requestCount   metrics.Counter
 	requestLatency metrics.Histogram
