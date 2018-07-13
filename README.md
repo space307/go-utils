@@ -11,6 +11,7 @@
 6. [server_group.go](#sg)
 6. [tracing.go](#tracing)
 7. [checker.go](#checker)
+8. [vault.go](#vault)
 
 <a name="debug" />
 
@@ -60,3 +61,9 @@ HTTP client based on standart [net/http](https://golang.org/pkg/net/http/) clien
 ### 7. checker
 
 Helper for execute series of tests
+
+<a name="vault" />
+
+### 8. vault
+
+Helper for working with vault hashicorp
