@@ -8,11 +8,13 @@ import (
 	"math"
 	"net"
 	"regexp"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,6 +46,7 @@ type Database struct {
 	db        *sql.DB
 	config    *Config
 	dsn       string
+	driver    string
 	lastRecon int64
 	access    *sync.RWMutex
 	isReady   int32
@@ -82,8 +85,7 @@ const (
 )
 
 var (
-	conErrorRegex       = regexp.MustCompile(`Error (2002|2003):`)
-	duplicateErrorRegex = regexp.MustCompile(`Error 1062:`)
+	conErrorRegex = regexp.MustCompile(`Error (2002|2003):`)
 	// ErrReconBan this error happen when try to reconnect less then cReconnectBanTime interval
 	ErrReconBan = errors.New("sql: reconnect banned")
 	// ErrNotInitialized this error happen when try to do some work on not initialized database
@@ -92,34 +94,69 @@ var (
 	ErrReconInProcess = errors.New("sql: other reconnect in process")
 )
 
-// InitDatabase creates a mysql storage object based on a given config.
-func InitDatabase(config *Config) (*Database, error) {
-	var err error
-	extDb := &Database{
-		config:   config,
-		access:   &sync.RWMutex{},
-		WarnChan: make(chan []error),
-	}
-
-	// charset
+// BuildMySQLDSN returns MySQL connect string for given config.
+func BuildMySQLDSN(config *Config) string {
+	const templ = "%s:%s@tcp(%s)/%s?charset=%s&timeout=%dms&readTimeout=%dms&writeTimeout=%dms&tx_isolation='READ-COMMITTED's"
 	if len(config.Charset) == 0 {
 		config.Charset = "utf8"
 	}
-
-	dsn := "%s:%s@tcp(%s)/%s?charset=%s&timeout=%dms&readTimeout=%dms&writeTimeout=%dms&tx_isolation='READ-COMMITTED'"
-	extDb.dsn = fmt.Sprintf(
-		dsn, extDb.config.User, extDb.config.Password, extDb.config.Addr,
-		extDb.config.Database, extDb.config.Charset, extDb.config.TimeoutMs, extDb.config.ReadTimeoutMs,
-		extDb.config.WriteTimeoutMs,
+	dsn := fmt.Sprintf(
+		templ, config.User, config.Password, config.Addr,
+		config.Database, config.Charset, config.TimeoutMs, config.ReadTimeoutMs,
+		config.WriteTimeoutMs,
 	)
-	if extDb.config.ParseTime {
-		extDb.dsn += fmt.Sprintf("&parseTime=%t", extDb.config.ParseTime)
+	if config.ParseTime {
+		dsn += fmt.Sprintf("&parseTime=%t", config.ParseTime)
 	}
-	if len(extDb.config.Timezone) > 1 {
-		extDb.dsn += fmt.Sprintf("&loc=%s", extDb.config.Timezone)
+	if len(config.Timezone) > 1 {
+		dsn += fmt.Sprintf("&loc=%s", config.Timezone)
 	}
-	err = extDb.Reconnect()
+	return dsn
+}
+
+// BuildPostgresDSN returns Postgres connect string for given config.
+func BuildPostgresDSN(config *Config) string {
+	const dsn = "dbname=%s user=%s password=%s host=%s port=%d connect_timeout=%d"
+	var host, port string
+	if parts := strings.Split(config.Addr, ":"); len(parts) > 1 {
+		host = strings.Join(parts[:len(parts)-1], ":")
+		port = parts[len(parts)-1]
+	} else {
+		host = parts[0]
+	}
+	return fmt.Sprintf(dsn, config.Database, config.User, config.Password, host, port, config.TimeoutMs/1000)
+}
+
+func buildDsn(driver string, config *Config) (string, error) {
+	switch driver {
+	case "mysql":
+		return BuildMySQLDSN(config), nil
+	case "postgres":
+		return BuildPostgresDSN(config), nil
+	default:
+		return "", errors.New("unknown driver")
+	}
+}
+
+// InitDatabase creates a mysql storage object based on a given config.
+// for compatibility purposes.
+func InitDatabase(config *Config) (*Database, error) {
+	return Init("mysql", config)
+}
+
+// Init creates a storage object based on a given config.
+func Init(driver string, config *Config) (*Database, error) {
+	dsn, err := buildDsn(driver, config)
 	if err != nil {
+		return nil, err
+	}
+	extDb := &Database{
+		driver:   driver,
+		dsn:      dsn,
+		access:   &sync.RWMutex{},
+		WarnChan: make(chan []error),
+	}
+	if err = extDb.Reconnect(); err != nil {
 		return nil, err
 	}
 	return extDb, nil
@@ -147,7 +184,7 @@ func (extDb *Database) Reconnect() error {
 	var try int
 	for {
 		var err error
-		tmpDb, err := sql.Open("mysql", extDb.dsn)
+		tmpDb, err := sql.Open(extDb.driver, extDb.dsn)
 		if err == nil {
 			err = tmpDb.Ping()
 		}
@@ -248,11 +285,14 @@ func (extDb *Database) getDb() *sql.DB {
 }
 
 // isConnectionError parse mysql error text and check if this connection error
-func isConnectionError(err error) bool {
+func isConnectionError(driver string, err error) bool {
 	if _, ok := err.(*net.OpError); ok {
 		return true
 	}
-	return conErrorRegex.MatchString(err.Error())
+	if driver == "mysql" {
+		return conErrorRegex.MatchString(err.Error())
+	}
+	return false
 }
 
 // Prepare function with reconnect logic
@@ -267,7 +307,7 @@ func (extDb *Database) Prepare(query string) (*sql.Stmt, error) {
 	}
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		if !isConnectionError(err) {
+		if !isConnectionError(extDb.driver, err) {
 			return nil, err
 		}
 		log.Info("Database prepare error ", err)
@@ -315,7 +355,7 @@ func (extDb *Database) Exec(query string, args ...interface{}) (sql.Result, erro
 	}
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		if !isConnectionError(err) {
+		if !isConnectionError(extDb.driver, err) {
 			return nil, err
 		}
 		log.Info("Database exec error ", err)
@@ -348,7 +388,7 @@ func (extDb *Database) Query(query string, args ...interface{}) (*sql.Rows, erro
 	}
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		if !isConnectionError(err) {
+		if !isConnectionError(extDb.driver, err) {
 			return nil, err
 		}
 		log.Info("Database query error ", err)
@@ -457,14 +497,6 @@ func (txC *TxConnection) Rollback() (err error) {
 	}
 
 	return nil
-}
-
-// IsErrorDuplicateKey check if given error is duplicate key error
-func IsErrorDuplicateKey(err error) bool {
-	if err != nil {
-		return duplicateErrorRegex.MatchString(err.Error())
-	}
-	return false
 }
 
 // ErrHasCode compare error and given mysql error code
