@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // postgres driver
 	log "github.com/sirupsen/logrus"
 )
 
@@ -116,7 +116,7 @@ func BuildMySQLDSN(config *Config) string {
 
 // BuildPostgresDSN returns Postgres connect string for given config.
 func BuildPostgresDSN(config *Config) string {
-	const dsn = "dbname=%s user=%s password=%s host=%s port=%d connect_timeout=%d"
+	const dsn = "dbname=%s user=%s password=%s host=%s port=%s connect_timeout=%d"
 	var host, port string
 	if parts := strings.Split(config.Addr, ":"); len(parts) > 1 {
 		host = strings.Join(parts[:len(parts)-1], ":")
@@ -481,22 +481,12 @@ func (extDb *Database) StartTransaction() (*TxConnection, error) {
 
 //Commit try to commit
 func (txC *TxConnection) Commit() (err error) {
-	err = txC.Tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return txC.Tx.Commit()
 }
 
 //Rollback try to rollback transaction
 func (txC *TxConnection) Rollback() (err error) {
-	err = txC.Tx.Rollback()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return txC.Tx.Rollback()
 }
 
 // ErrHasCode compare error and given mysql error code
