@@ -12,6 +12,7 @@
 6. [tracing.go](#tracing)
 7. [checker.go](#checker)
 8. [vault.go](#vault)
+9. [json_formatter.go](#formatter)
 
 <a name="debug" />
 
@@ -67,3 +68,9 @@ Helper for execute series of tests
 ### 8. vault
 
 Helper for working with vault hashicorp
+
+<a name="formatter" />
+
+### 9. formatter
+
+Implementation JSONFormatter of [logrus](https://github.com/sirupsen/logrus) with supporting additional fields for output
