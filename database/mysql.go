@@ -16,7 +16,7 @@ var (
 
 // BuildMySQLDSN returns MySQL connect string for given config.
 func BuildMySQLDSN(config *Config) string {
-	const templ = "%s:%s@tcp(%s)/%s?charset=%s&timeout=%dms&readTimeout=%dms&writeTimeout=%dms&tx_isolation='READ-COMMITTED's"
+	const templ = "%s:%s@tcp(%s)/%s?charset=%s&timeout=%dms&readTimeout=%dms&writeTimeout=%dms&tx_isolation='READ-COMMITTED'"
 	if len(config.Charset) == 0 {
 		config.Charset = "utf8"
 	}
