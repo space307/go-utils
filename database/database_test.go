@@ -9,8 +9,9 @@ import (
 
 func TestMySQLDB(t *testing.T) {
 	cfg := &Config{
-		Addr: "127.0.0.1:3306",
-		User: "travis",
+		Addr:     "127.0.0.1:3306",
+		User:     "travis",
+		Database: "db_test",
 	}
 	db, err := InitDatabase(cfg)
 	require.NoError(t, err)
