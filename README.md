@@ -9,10 +9,10 @@
 4. [config.go](#config)
 5. [api.go](#api)
 6. [server_group.go](#sg)
-6. [tracing.go](#tracing)
-7. [checker.go](#checker)
-8. [vault.go](#vault)
-9. [json_formatter.go](#formatter)
+7. [tracing.go](#tracing)
+8. [checker.go](#checker)
+9. [vault.go](#vault)
+10. [json_formatter.go](#formatter)
 
 <a name="debug" />
 
@@ -53,24 +53,24 @@ ServerGroup allows to start several sg.Server objects and stop them, tracking er
 
 <a name="tracing" />
 
-### 6. tracing
+### 7. tracing
 
 HTTP client based on standart [net/http](https://golang.org/pkg/net/http/) client with additional method adding a Zipkin span to request.
 
 <a name="checker" />
 
-### 7. checker
+### 8. checker
 
 Helper for execute series of tests
 
 <a name="vault" />
 
-### 8. vault
+### 9. vault
 
 Helper for working with vault hashicorp
 
 <a name="formatter" />
 
-### 9. formatter
+### 10. formatter
 
 Implementation JSONFormatter of [logrus](https://github.com/sirupsen/logrus) with supporting additional fields for output

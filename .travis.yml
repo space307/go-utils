@@ -4,3 +4,13 @@ go:
   
 script:
   - go test ./...
+
+services:
+  - mysql
+  - postgresql
+
+before_install:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS db_test;'
+
+before_script:
+  - psql -c 'CREATE DATABASE db_test;' -U postgres
