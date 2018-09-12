@@ -8,6 +8,7 @@ script:
 services:
   - mysql
   - postgresql
+  - rabbitmq
 
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS db_test;'
