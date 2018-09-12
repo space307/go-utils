@@ -13,6 +13,7 @@
 8. [checker.go](#checker)
 9. [vault.go](#vault)
 10. [json_formatter.go](#formatter)
+11. [messagebus.go](#messagebus)
 
 <a name="debug" />
 
@@ -74,3 +75,9 @@ Helper for working with vault hashicorp
 ### 10. formatter
 
 Implementation JSONFormatter of [logrus](https://github.com/sirupsen/logrus) with supporting additional fields for output
+
+<a name="messagebus" />
+
+### 11. messagebus
+
+Handy wrapper for [amqp](https://github.com/streadway/amqp)
