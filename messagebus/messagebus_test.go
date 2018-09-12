@@ -3,7 +3,6 @@ package messagebus
 import (
 	"bytes"
 	"fmt"
-	"runtime"
 	"testing"
 	"time"
 
@@ -58,17 +57,7 @@ type mqTestSuite struct {
 }
 
 func (s *mqTestSuite) SetupSuite() {
-
 	s.mqDsn = fmt.Sprintf("amqp://guest:guest@%s:%s/", "127.0.0.1", "5672")
-
-	err := s.d.Retry(func() error {
-		mq, err := Dial(s.mqDsn)
-		if err == nil {
-			mq.Close()
-		}
-		return err
-	})
-	s.Require().NoError(err, `Could not connect to docker: %s`, err)
 }
 
 func (s *mqTestSuite) TearDownSuite() {
