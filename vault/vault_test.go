@@ -1,12 +1,14 @@
 package vault
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/vault/api"
 	credAppRole "github.com/hashicorp/vault/builtin/credential/approle"
+	"github.com/hashicorp/vault/builtin/logical/transit"
 	vaulthttp "github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/vault"
@@ -95,6 +97,68 @@ func TestVaultClient_Read(t *testing.T) {
 	assert.Contains(t, err.Error(), `permission denied`)
 }
 
+func TestVaultClient_Encrypt(t *testing.T) {
+
+	client, closer := testVaultServer(t)
+	defer closer()
+
+	err := client.Sys().PutPolicy("my-policy",
+		`path "transit/*" {
+  capabilities = ["create", "read", "update"]
+}
+`)
+
+	require.NoError(t, err)
+
+	secret, err := client.Logical().Write("auth/approle/role/role1/secret-id", nil)
+	require.NoError(t, err)
+	secretID := secret.Data["secret_id"].(string)
+
+	secret, err = client.Logical().Read("auth/approle/role/role1/role-id")
+	require.NoError(t, err)
+	roleID := secret.Data["role_id"].(string)
+
+	vc, err := New(client.Address())
+	require.NoError(t, err)
+
+	err = vc.Login(roleID, secretID)
+	require.NoError(t, err)
+
+	const transitKey = "sample"
+	if err := client.Sys().Mount("transit", &api.MountInput{
+		Type: "transit",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	err = vc.CreateTransitKey(transitKey)
+	require.NoError(t, err)
+
+	const testStringData = "some special data"
+	data := base64.StdEncoding.EncodeToString([]byte(testStringData))
+
+	encrypted, err := vc.EncryptData(transitKey, data)
+	require.NoError(t, err)
+	require.NotEmpty(t, encrypted)
+
+	_, err = vc.EncryptData(transitKey+"bad/dsdsa", data)
+	require.Error(t, err)
+
+	decrypted, err := vc.DecryptData(transitKey, encrypted)
+	require.NoError(t, err)
+	require.NotEmpty(t, decrypted)
+
+	_, err = vc.DecryptData(transitKey+"bad/kk", encrypted)
+	require.Error(t, err)
+
+	_, err = vc.DecryptData(transitKey, encrypted+"bad")
+	require.Error(t, err)
+
+	byteData, err := base64.StdEncoding.DecodeString(decrypted)
+	require.NoError(t, err)
+	require.Equal(t, string(byteData), testStringData)
+}
+
 func testVaultServer(t testing.TB) (*api.Client, func()) {
 	var err error
 
@@ -106,6 +170,9 @@ func testVaultServer(t testing.TB) (*api.Client, func()) {
 		Logger:       nil,
 		CredentialBackends: map[string]logical.Factory{
 			"approle": credAppRole.Factory,
+		},
+		LogicalBackends: map[string]logical.Factory{
+			"transit": transit.Factory,
 		},
 	}
 

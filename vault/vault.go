@@ -9,6 +9,9 @@ import (
 type Vault interface {
 	Read(path, name string) (string, error)
 	Login(roleID, secretID string) error
+	CreateTransitKey(key string) error
+	EncryptData(key, data string) (string, error)
+	DecryptData(key, encrypted string) (string, error)
 }
 
 type VaultClient struct {
@@ -65,4 +68,52 @@ func (vc *VaultClient) Login(roleID, secretID string) error {
 	vc.client.SetToken(secret.Auth.ClientToken)
 
 	return nil
+}
+
+func (vc *VaultClient) CreateTransitKey(key string) error {
+	_, err := vc.client.Logical().Write("transit/keys/"+key, map[string]interface{}{})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (vc *VaultClient) EncryptData(key, data string) (string, error) {
+	secret, err := vc.client.Logical().Write("transit/encrypt/"+key,
+		map[string]interface{}{
+			"plaintext": data,
+		})
+
+	if err != nil {
+		return "", err
+	}
+
+	encypted, ok := secret.Data["ciphertext"]
+	if !ok {
+		return "", fmt.Errorf("expected encrypted data!")
+
+	}
+
+	return encypted.(string), nil
+}
+
+func (vc *VaultClient) DecryptData(key, encrypted string) (string, error) {
+	secret, err := vc.client.Logical().Write("transit/decrypt/"+key,
+		map[string]interface{}{
+			"ciphertext": encrypted,
+		})
+
+	if err != nil {
+		return "", err
+	}
+
+	decrypted, ok := secret.Data["plaintext"]
+	if !ok {
+		return "", fmt.Errorf("expected decrypted data!")
+
+	}
+
+	return decrypted.(string), nil
 }
