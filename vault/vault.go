@@ -9,7 +9,7 @@ import (
 type Vault interface {
 	Read(path, name string) (string, error)
 	Login(roleID, secretID string) error
-	WriteTransitKey(key string) error
+	CreateTransitKey(key string) error
 	EncryptData(key, data string) (string, error)
 	DecryptData(key, encrypted string) (string, error)
 }
