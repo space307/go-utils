@@ -1,6 +1,7 @@
 package messagebus
 
 import (
+	"fmt"
 	"github.com/streadway/amqp"
 )
 
@@ -27,8 +28,17 @@ type MessageBus struct {
 	appName   string
 }
 
+type Config struct {
+	Host        string
+	Port        string
+	User        string
+	Password    string
+	VirtualHost string
+}
+
 // Dial initialize connection to amqp
-func Dial(mqDsn string) (*MessageBus, error) {
+func Dial(c *Config) (*MessageBus, error) {
+	mqDsn := makeDsn(c)
 	conn, err := amqp.Dial(mqDsn)
 	if err != nil {
 		return nil, err
@@ -46,6 +56,14 @@ func Dial(mqDsn string) (*MessageBus, error) {
 	}
 
 	return mb, nil
+}
+
+func makeDsn(c *Config) string {
+	var auth string
+	if c.User != "" && c.Password != "" {
+		auth = fmt.Sprintf("%s:%s@", c.User, c.Password)
+	}
+	return fmt.Sprintf("amqp://%s%s:%s/%s", auth, c.Host, c.Port, c.VirtualHost)
 }
 
 // SetName - sets current connection name

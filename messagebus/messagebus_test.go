@@ -53,11 +53,17 @@ func (m *mqChannelMock) Close() error {
 
 type mqTestSuite struct {
 	suite.Suite
-	mqDsn string
+	mbConfig *Config
 }
 
 func (s *mqTestSuite) SetupSuite() {
-	s.mqDsn = fmt.Sprintf("amqp://guest:guest@%s:%s/", "127.0.0.1", "5672")
+	s.mbConfig = &Config{
+		"127.0.0.1",
+		"5672",
+		"guest",
+		"guest",
+		"",
+	}
 }
 
 func (s *mqTestSuite) TearDownSuite() {
@@ -68,8 +74,7 @@ func TestMqTestSuite(t *testing.T) {
 }
 
 func (s *mqTestSuite) TestConsumeProduce() {
-
-	pmq, err := Dial(s.mqDsn)
+	pmq, err := Dial(s.mbConfig)
 	s.Require().NoError(err)
 
 	defer pmq.Close()
@@ -80,7 +85,7 @@ func (s *mqTestSuite) TestConsumeProduce() {
 	lock := make(chan struct{})
 
 	go func() {
-		cmq, err := Dial(s.mqDsn)
+		cmq, err := Dial(s.mbConfig)
 		s.Require().NoError(err)
 
 		defer cmq.Close()
@@ -118,7 +123,7 @@ func (s *mqTestSuite) TestConsumeProduce() {
 
 func (s *mqTestSuite) TestConsumerRetry() {
 
-	pmq, err := Dial(s.mqDsn)
+	pmq, err := Dial(s.mbConfig)
 	s.Require().NoError(err)
 
 	defer pmq.Close()
@@ -133,7 +138,7 @@ func (s *mqTestSuite) TestConsumerRetry() {
 	var try int
 
 	go func() {
-		cmq, err := Dial(s.mqDsn)
+		cmq, err := Dial(s.mbConfig)
 		s.Require().NoError(err)
 
 		defer cmq.Close()
