@@ -58,8 +58,7 @@ type mqTestSuite struct {
 
 func (s *mqTestSuite) SetupSuite() {
 	s.mbConfig = &Config{
-		"127.0.0.1",
-		"5672",
+		"127.0.0.1:5672",
 		"guest",
 		"guest",
 		"",
