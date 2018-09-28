@@ -37,9 +37,8 @@ type Config struct {
 }
 
 // Dial initialize connection to amqp
-func Dial(c *Config) (*MessageBus, error) {
-	mqDsn := makeDsn(c)
-	conn, err := amqp.Dial(mqDsn)
+func Dial(dsn string) (*MessageBus, error) {
+	conn, err := amqp.Dial(dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +57,8 @@ func Dial(c *Config) (*MessageBus, error) {
 	return mb, nil
 }
 
-func makeDsn(c *Config) string {
+// MakeDsn - creates dsn from config
+func MakeDsn(c *Config) string {
 	urlStruct := url.URL{
 		Scheme: "amqp",
 		User:   url.UserPassword(c.User, c.Password),

@@ -53,16 +53,16 @@ func (m *mqChannelMock) Close() error {
 
 type mqTestSuite struct {
 	suite.Suite
-	mbConfig *Config
+	mbDsn string
 }
 
 func (s *mqTestSuite) SetupSuite() {
-	s.mbConfig = &Config{
+	s.mbDsn = MakeDsn(&Config{
 		"127.0.0.1:5672",
 		"guest",
 		"guest",
 		"",
-	}
+	})
 }
 
 func (s *mqTestSuite) TearDownSuite() {
@@ -73,7 +73,7 @@ func TestMqTestSuite(t *testing.T) {
 }
 
 func (s *mqTestSuite) TestConsumeProduce() {
-	pmq, err := Dial(s.mbConfig)
+	pmq, err := Dial(s.mbDsn)
 	s.Require().NoError(err)
 
 	defer pmq.Close()
@@ -84,7 +84,7 @@ func (s *mqTestSuite) TestConsumeProduce() {
 	lock := make(chan struct{})
 
 	go func() {
-		cmq, err := Dial(s.mbConfig)
+		cmq, err := Dial(s.mbDsn)
 		s.Require().NoError(err)
 
 		defer cmq.Close()
@@ -122,7 +122,7 @@ func (s *mqTestSuite) TestConsumeProduce() {
 
 func (s *mqTestSuite) TestConsumerRetry() {
 
-	pmq, err := Dial(s.mbConfig)
+	pmq, err := Dial(s.mbDsn)
 	s.Require().NoError(err)
 
 	defer pmq.Close()
@@ -137,7 +137,7 @@ func (s *mqTestSuite) TestConsumerRetry() {
 	var try int
 
 	go func() {
-		cmq, err := Dial(s.mbConfig)
+		cmq, err := Dial(s.mbDsn)
 		s.Require().NoError(err)
 
 		defer cmq.Close()
