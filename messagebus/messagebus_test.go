@@ -137,7 +137,7 @@ func (s *mqTestSuite) TestConsumerRetry() {
 	var try int
 
 	go func() {
-		cmq, err := Dial(s.mbConfig)
+		cmq, err := Dial(s.mbDsn)
 		s.Require().NoError(err)
 
 		defer cmq.Close()
