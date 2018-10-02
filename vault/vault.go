@@ -7,6 +7,7 @@ import (
 )
 
 type Vault interface {
+	ReadAll(path string) (map[string]string, error)
 	Read(path, name string) (string, error)
 	Login(roleID, secretID string) error
 	CreateTransitKey(key string) error
@@ -31,6 +32,24 @@ func New(address string) (*VaultClient, error) {
 	}
 
 	return &VaultClient{client: vault}, nil
+}
+
+func (vc *VaultClient) ReadAll(path string) (map[string]string, error) {
+	secret, err := vc.client.Logical().Read(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if secret == nil {
+		return nil, fmt.Errorf(`empty secret`)
+	}
+
+	var data = make(map[string]string, len(secret.Data))
+	for key, val := range secret.Data {
+		data[key] = val.(string)
+	}
+
+	return data, nil
 }
 
 func (vc *VaultClient) Read(path, name string) (string, error) {
