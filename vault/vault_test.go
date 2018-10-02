@@ -97,6 +97,57 @@ func TestVaultClient_Read(t *testing.T) {
 	assert.Contains(t, err.Error(), `permission denied`)
 }
 
+func TestVaultClient_ReadAll(t *testing.T) {
+	client, closer := testVaultServer(t)
+	defer closer()
+
+	err := client.Sys().PutPolicy("my-policy",
+		`
+	path "secret/bar" {
+		capabilities = ["read"]	
+	}`)
+	require.NoError(t, err)
+
+	secret, err := client.Logical().Write("auth/approle/role/role1/secret-id", nil)
+	require.NoError(t, err)
+	secretID := secret.Data["secret_id"].(string)
+
+	secret, err = client.Logical().Read("auth/approle/role/role1/role-id")
+	require.NoError(t, err)
+	roleID := secret.Data["role_id"].(string)
+
+	_, err = client.Logical().Write("secret/bar", map[string]interface{}{"foo": "bar1", "key": "val"})
+	require.NoError(t, err)
+
+	vc, err := New(client.Address())
+	require.NoError(t, err)
+
+	err = vc.Login(roleID, secretID)
+	require.NoError(t, err)
+
+	//read all
+	all, err := vc.ReadAll("secret/bar")
+	assert.NoError(t, err)
+	assert.Equal(t, "bar1", all["foo"])
+	assert.Equal(t, "val", all["key"])
+
+	//read one
+	one, err := vc.Read("secret/bar", "key")
+	assert.NoError(t, err)
+	assert.Equal(t, "val", one)
+
+	//error
+	_, err = vc.ReadAll("secret/bar_none")
+	assert.Error(t, err)
+
+	//nil
+	_, err = client.Logical().Delete("secret/bar")
+	require.NoError(t, err)
+
+	_, err = vc.ReadAll("secret/bar")
+	assert.Error(t, err)
+}
+
 func TestVaultClient_Encrypt(t *testing.T) {
 
 	client, closer := testVaultServer(t)
