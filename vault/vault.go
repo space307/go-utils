@@ -7,12 +7,24 @@ import (
 )
 
 type Vault interface {
-	ReadAll(path string) (map[string]string, error)
-	Read(path, name string) (string, error)
+	VaultLogin
+	VaultTransition
+	VaultData
+}
+
+type VaultLogin interface {
 	Login(roleID, secretID string) error
+}
+
+type VaultTransition interface {
 	CreateTransitKey(key string) error
 	EncryptData(key, data string) (string, error)
 	DecryptData(key, encrypted string) (string, error)
+}
+
+type VaultData interface {
+	ReadAll(path string) (map[string]string, error)
+	Read(path, name string) (string, error)
 }
 
 type VaultClient struct {
