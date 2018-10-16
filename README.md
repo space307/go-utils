@@ -14,6 +14,7 @@
 9. [vault.go](#vault)
 10. [json_formatter.go](#formatter)
 11. [messagebus.go](#messagebus)
+12. [amqp-kit](#amqp-kit)
 
 <a name="debug" />
 
@@ -138,3 +139,11 @@ func main() {
 	}
 }
 ```
+
+<a name="amqp-kit" />
+
+### 12. amqp-kit
+
+AMQP wrapper in go-kit style
+
+see test example for use: [publisher_test.go](https://github.com/space307/go-utils/blob/master/amqp-kit/publisher_test.go)

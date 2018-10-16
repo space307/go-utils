@@ -35,7 +35,8 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 	ch, err := conn.Channel()
 	s.NoError(err)
 
-	err = Declare(ch, `foo`, `test`, []string{`key.request.test`, `key.response.test`})
+	err = Declare(ch, `foo`, `test`,
+		[]string{`key.request.test`, `key.response.test`, `key.response.unknown`})
 	s.NoError(err)
 
 	dec1 := make(chan *amqp.Delivery)
@@ -109,9 +110,12 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 	d = <-dec2
 	s.Equal(d.Body, []byte(`{"foo":"bar"}`))
 
-	err = pub.Publish("foo", "key.response.test", `cor_2`, []byte(`{"f1":"b1"}`))
+	err = pub.Publish("foo", "key.response.test", `cor_2`, []byte(`{"f2":"b2"}`))
 	s.NoError(err)
 
 	d = <-dec2
-	s.Equal(d.Body, []byte(`{"f1":"b1"}`))
+	s.Equal(d.Body, []byte(`{"f2":"b2"}`))
+
+	err = pub.Publish("foo", "key.response.unknown", `cor_3`, []byte(`{"f3":"b3"}`))
+	s.NoError(err)
 }

@@ -1,6 +1,7 @@
 package amqp_kit
 
 import (
+	"log"
 	"net/url"
 
 	"github.com/go-kit/kit/endpoint"
@@ -63,11 +64,18 @@ func (s *Server) Serve() error {
 			return err
 		}
 
-		go func() {
+		go func(q string) {
 			for d := range msgs {
-				s.qk[sub.Q][d.RoutingKey](&d)
+				if _, exist := s.qk[q][d.RoutingKey]; !exist {
+					d.Nack(false, false)
+					log.Printf(`subscribe key not found %s`, d.RoutingKey)
+
+					continue
+				}
+
+				s.qk[q][d.RoutingKey](&d)
 			}
-		}()
+		}(sub.Q)
 	}
 
 	return nil
