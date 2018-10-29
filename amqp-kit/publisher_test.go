@@ -35,7 +35,7 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 	ch, err := conn.Channel()
 	s.NoError(err)
 
-	err = Declare(ch, `foo`, `test`,
+	err = Declare(ch, `foo`, `test-p`,
 		[]string{`key.request.test`, `key.response.test`, `key.response.unknown`})
 	s.NoError(err)
 
@@ -44,8 +44,8 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 
 	subs := []SubscribeInfo{
 		{
-			Q:    `test`,
-			Name: `test-request`,
+			Q:    `test-p`,
+			Name: ``,
 			Key:  `key.request.test`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				res := struct {
@@ -71,8 +71,8 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 			},
 		},
 		{
-			Q:    `test`,
-			Name: `test-response`,
+			Q:    `test-p`,
+			Name: ``,
 			Key:  `key.response.test`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
