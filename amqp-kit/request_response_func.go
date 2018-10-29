@@ -2,8 +2,6 @@ package amqp_kit
 
 import (
 	"context"
-	"time"
-
 	"github.com/streadway/amqp"
 )
 
@@ -32,18 +30,6 @@ func SetPublishKey(publishKey string) RequestFunc {
 	return func(ctx context.Context, pub *amqp.Publishing,
 	) context.Context {
 		return context.WithValue(ctx, ContextKeyPublishKey, publishKey)
-	}
-}
-
-// SetNackSleepDuration returns a RequestFunc that sets the amount of time
-// to sleep in the event of a Nack.
-// This has to be used in conjunction with an error encoder that Nack and sleeps.
-// One example is the SingleNackRequeueErrorEncoder
-// It is designed to be used by Subscribers
-func SetNackSleepDuration(duration time.Duration) RequestFunc {
-	return func(ctx context.Context, pub *amqp.Publishing,
-	) context.Context {
-		return context.WithValue(ctx, ContextKeyNackSleepDuration, duration)
 	}
 }
 
@@ -82,13 +68,6 @@ func getPublishKey(ctx context.Context) string {
 	return ""
 }
 
-func getNackSleepDuration(ctx context.Context) time.Duration {
-	if duration := ctx.Value(ContextKeyNackSleepDuration); duration != nil {
-		return duration.(time.Duration)
-	}
-	return 0
-}
-
 type contextKey int
 
 const (
@@ -98,9 +77,4 @@ const (
 	// ContextKeyPublishKey is the value of the ReplyTo field in
 	// amqp.Publish
 	ContextKeyPublishKey
-	// ContextKeyNackSleepDuration is the duration to sleep for if the
-	// service Nack and requeues a message.
-	// This is to prevent sporadic send-resending of message
-	// when a message is constantly Nack'd and requeued
-	ContextKeyNackSleepDuration
 )
