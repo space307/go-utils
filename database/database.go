@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -97,13 +98,13 @@ type impl interface {
 }
 
 func initDriver(driver string) (impl, error) {
-	switch driver {
-	case "mysql":
+	switch {
+	case strings.HasPrefix(driver, "mysql"):
 		return &mysqlImpl{}, nil
-	case "postgres":
+	case strings.HasPrefix(driver, "postgres"):
 		return &pqImpl{}, nil
 	default:
-		return nil, errors.New("unknown driver")
+		return nil, fmt.Errorf("unknown driver: `%s`", driver)
 	}
 }
 

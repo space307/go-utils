@@ -2,8 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"strings"
 	"testing"
 
+	// "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,6 +36,30 @@ func TestPostgresDB(t *testing.T) {
 	require.NoError(t, err)
 
 	doTest(t, db)
+}
+
+func TestInitDriver(t *testing.T) {
+
+	var (
+		i  impl
+		e  error
+		ok bool
+	)
+
+	i, err = initDriver("mysql")
+	require.NoError(t, err)
+
+	_, ok = i.(*mysqlImpl)
+	require.True(t, ok)
+
+	i, err = initDriver("postgres")
+	require.NoError(t, err)
+
+	_, ok = i.(*pqImpl)
+	require.True(t, ok)
+
+	_, err = initDriver("unknown")
+	require.True(t, strings.HasPrefix(err.Error(), "unknown driver"))
 }
 
 func doTest(t *testing.T, db *Database) {
