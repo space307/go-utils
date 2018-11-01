@@ -41,9 +41,9 @@ func TestPostgresDB(t *testing.T) {
 func TestInitDriver(t *testing.T) {
 
 	var (
-		i  impl
-		e  error
-		ok bool
+		i   impl
+		err error
+		ok  bool
 	)
 
 	i, err = initDriver("mysql")
