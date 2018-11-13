@@ -43,7 +43,7 @@ func NewServer(s []SubscribeInfo, con *amqp.Connection) *Server {
 func (s *Server) Serve() error {
 	ch, err := s.Conn.Channel()
 	if err != nil {
-		logrus.Error(`error create channel: %v`, err)
+		logrus.Errorf(`error create channel: %v`, err)
 		return err
 	}
 

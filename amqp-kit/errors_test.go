@@ -54,7 +54,7 @@ func TestErrSuite(t *testing.T) {
 
 func (s *errSuite) TestErrResponse() {
 	conn, err := amqp.Dial(s.dsn)
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	ch, err := conn.Channel()
 	s.Require().NoError(err)
