@@ -30,7 +30,7 @@ func TestPubSuite(t *testing.T) {
 
 func (s *pubSuite) TestSuccessfulPublisher() {
 	conn, err := amqp.Dial(s.dsn)
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	ch, err := conn.Channel()
 	s.NoError(err)
