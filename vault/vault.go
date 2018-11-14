@@ -28,7 +28,7 @@ type VaultData interface {
 }
 
 type VaultClient struct {
-	client *api.Client
+	Client *api.Client
 }
 
 func New(address string) (*VaultClient, error) {
@@ -43,11 +43,11 @@ func New(address string) (*VaultClient, error) {
 		return nil, err
 	}
 
-	return &VaultClient{client: vault}, nil
+	return &VaultClient{Client: vault}, nil
 }
 
 func (vc *VaultClient) ReadAll(path string) (map[string]string, error) {
-	secret, err := vc.client.Logical().Read(path)
+	secret, err := vc.Client.Logical().Read(path)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (vc *VaultClient) ReadAll(path string) (map[string]string, error) {
 }
 
 func (vc *VaultClient) Read(path, name string) (string, error) {
-	secret, err := vc.client.Logical().Read(path)
+	secret, err := vc.Client.Logical().Read(path)
 	if err != nil {
 		return "", err
 	}
@@ -83,7 +83,7 @@ func (vc *VaultClient) Read(path, name string) (string, error) {
 }
 
 func (vc *VaultClient) Login(roleID, secretID string) error {
-	secret, err := vc.client.Logical().Write("auth/approle/login",
+	secret, err := vc.Client.Logical().Write("auth/approle/login",
 		map[string]interface{}{
 			"role_id": roleID, "secret_id": secretID,
 		})
@@ -96,13 +96,13 @@ func (vc *VaultClient) Login(roleID, secretID string) error {
 		return fmt.Errorf("expected a successful login")
 	}
 
-	vc.client.SetToken(secret.Auth.ClientToken)
+	vc.Client.SetToken(secret.Auth.ClientToken)
 
 	return nil
 }
 
 func (vc *VaultClient) CreateTransitKey(key string) error {
-	_, err := vc.client.Logical().Write("transit/keys/"+key, map[string]interface{}{})
+	_, err := vc.Client.Logical().Write("transit/keys/"+key, map[string]interface{}{})
 
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (vc *VaultClient) CreateTransitKey(key string) error {
 }
 
 func (vc *VaultClient) EncryptData(key, data string) (string, error) {
-	secret, err := vc.client.Logical().Write("transit/encrypt/"+key,
+	secret, err := vc.Client.Logical().Write("transit/encrypt/"+key,
 		map[string]interface{}{
 			"plaintext": data,
 		})
@@ -131,7 +131,7 @@ func (vc *VaultClient) EncryptData(key, data string) (string, error) {
 }
 
 func (vc *VaultClient) DecryptData(key, encrypted string) (string, error) {
-	secret, err := vc.client.Logical().Write("transit/decrypt/"+key,
+	secret, err := vc.Client.Logical().Write("transit/decrypt/"+key,
 		map[string]interface{}{
 			"ciphertext": encrypted,
 		})
