@@ -19,7 +19,7 @@ import (
 func TestNew(t *testing.T) {
 	vc, err := New("")
 	assert.NoError(t, err)
-	assert.NotEmpty(t, vc.client)
+	assert.NotEmpty(t, vc.Client)
 }
 
 func TestVaultClient_Login(t *testing.T) {
