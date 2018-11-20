@@ -30,6 +30,7 @@ type Server struct {
 	Conn *amqp.Connection
 	qk   map[string]map[string]func(deliv *amqp.Delivery)
 	subs []SubscribeInfo
+	ch   *amqp.Channel
 }
 
 func NewServer(s []SubscribeInfo, con *amqp.Connection) *Server {
@@ -41,7 +42,9 @@ func NewServer(s []SubscribeInfo, con *amqp.Connection) *Server {
 }
 
 func (s *Server) Serve() error {
-	ch, err := s.Conn.Channel()
+	var err error
+
+	s.ch, err = s.Conn.Channel()
 	if err != nil {
 		logrus.Errorf(`error create channel: %v`, err)
 		return err
@@ -49,7 +52,7 @@ func (s *Server) Serve() error {
 
 	for _, si := range s.subs {
 		sbs := NewSubscriber(si.E, si.Dec, si.Enc, si.O...)
-		f := sbs.ServeDelivery(ch)
+		f := sbs.ServeDelivery(s.ch)
 		child, ok := s.qk[si.Q]
 		if !ok {
 			child = map[string]func(deliv *amqp.Delivery){}
@@ -59,26 +62,33 @@ func (s *Server) Serve() error {
 	}
 
 	for _, sub := range s.subs {
-		msgs, err := ch.Consume(sub.Q, sub.Name, false, false, false, false, nil)
+		msgs, err := s.ch.Consume(sub.Q, sub.Name, false, false, false, false, nil)
 		if err != nil {
 			return err
 		}
 
 		go func(q string) {
-			for d := range msgs {
-				if _, exist := s.qk[q][d.RoutingKey]; !exist {
-					d.Nack(false, false)
-					log.Printf(`subscribe key not found %s`, d.RoutingKey)
-
-					continue
+			for {
+				d, ok := <-msgs
+				if !ok {
+					break
 				}
 
-				s.qk[q][d.RoutingKey](&d)
+				if handler, exist := s.qk[q][d.RoutingKey]; !exist {
+					d.Nack(false, false)
+					log.Printf(`subscribe key not found %s`, d.RoutingKey)
+				} else {
+					handler(&d)
+				}
 			}
 		}(sub.Q)
 	}
 
 	return nil
+}
+
+func (s *Server) Stop() error {
+	return s.ch.Close()
 }
 
 // MakeDsn - creates dsn from config
