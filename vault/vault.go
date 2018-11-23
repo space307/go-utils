@@ -2,7 +2,6 @@ package vault
 
 import (
 	"fmt"
-
 	"github.com/hashicorp/vault/api"
 )
 
@@ -17,9 +16,9 @@ type VaultLogin interface {
 }
 
 type VaultTransition interface {
-	CreateTransitKey(key string) error
-	EncryptData(key, data string) (string, error)
-	DecryptData(key, encrypted string) (string, error)
+	CreateTransitKey(path, key string) error
+	EncryptData(path, key, data string) (string, error)
+	DecryptData(path, key, encrypted string) (string, error)
 }
 
 type VaultData interface {
@@ -101,8 +100,8 @@ func (vc *VaultClient) Login(roleID, secretID string) error {
 	return nil
 }
 
-func (vc *VaultClient) CreateTransitKey(key string) error {
-	_, err := vc.Client.Logical().Write("transit/keys/"+key, map[string]interface{}{})
+func (vc *VaultClient) CreateTransitKey(path, key string) error {
+	_, err := vc.Client.Logical().Write(path+"/keys/"+key, map[string]interface{}{})
 
 	if err != nil {
 		return err
@@ -111,8 +110,8 @@ func (vc *VaultClient) CreateTransitKey(key string) error {
 	return nil
 }
 
-func (vc *VaultClient) EncryptData(key, data string) (string, error) {
-	secret, err := vc.Client.Logical().Write("transit/encrypt/"+key,
+func (vc *VaultClient) EncryptData(path, key, data string) (string, error) {
+	secret, err := vc.Client.Logical().Write(path+"/encrypt/"+key,
 		map[string]interface{}{
 			"plaintext": data,
 		})
@@ -123,15 +122,15 @@ func (vc *VaultClient) EncryptData(key, data string) (string, error) {
 
 	encypted, ok := secret.Data["ciphertext"]
 	if !ok {
-		return "", fmt.Errorf("expected encrypted data!")
+		return "", fmt.Errorf("expected encrypted data! ")
 
 	}
 
 	return encypted.(string), nil
 }
 
-func (vc *VaultClient) DecryptData(key, encrypted string) (string, error) {
-	secret, err := vc.Client.Logical().Write("transit/decrypt/"+key,
+func (vc *VaultClient) DecryptData(path, key, encrypted string) (string, error) {
+	secret, err := vc.Client.Logical().Write(path+"/decrypt/"+key,
 		map[string]interface{}{
 			"ciphertext": encrypted,
 		})
@@ -142,7 +141,7 @@ func (vc *VaultClient) DecryptData(key, encrypted string) (string, error) {
 
 	decrypted, ok := secret.Data["plaintext"]
 	if !ok {
-		return "", fmt.Errorf("expected decrypted data!")
+		return "", fmt.Errorf("expected decrypted data! ")
 
 	}
 

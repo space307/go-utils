@@ -3,6 +3,7 @@ package vault
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -176,33 +177,36 @@ func TestVaultClient_Encrypt(t *testing.T) {
 	require.NoError(t, err)
 
 	const transitKey = "sample"
+	const transitPath = "transit"
 	if err := client.Sys().Mount("transit", &api.MountInput{
 		Type: "transit",
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	err = vc.CreateTransitKey(transitKey)
+	err = vc.CreateTransitKey(transitPath, transitKey)
 	require.NoError(t, err)
 
 	const testStringData = "some special data"
 	data := base64.StdEncoding.EncodeToString([]byte(testStringData))
 
-	encrypted, err := vc.EncryptData(transitKey, data)
+	log.Print(`sdsafs`)
+
+	encrypted, err := vc.EncryptData(transitPath, transitKey, data)
 	require.NoError(t, err)
 	require.NotEmpty(t, encrypted)
 
-	_, err = vc.EncryptData(transitKey+"bad/dsdsa", data)
+	_, err = vc.EncryptData(transitPath, transitKey+"bad/dsdsa", data)
 	require.Error(t, err)
 
-	decrypted, err := vc.DecryptData(transitKey, encrypted)
+	decrypted, err := vc.DecryptData(transitPath, transitKey, encrypted)
 	require.NoError(t, err)
 	require.NotEmpty(t, decrypted)
 
-	_, err = vc.DecryptData(transitKey+"bad/kk", encrypted)
+	_, err = vc.DecryptData(transitPath, transitKey+"bad/kk", encrypted)
 	require.Error(t, err)
 
-	_, err = vc.DecryptData(transitKey, encrypted+"bad")
+	_, err = vc.DecryptData(transitPath, transitKey, encrypted+"bad")
 	require.Error(t, err)
 
 	byteData, err := base64.StdEncoding.DecodeString(decrypted)
