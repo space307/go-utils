@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+const (
+	rabbitTestAddr = "127.0.0.1:5672"
+)
+
 type apiSuite struct {
 	suite.Suite
 	dsn  string
@@ -18,7 +22,7 @@ type apiSuite struct {
 func (s *apiSuite) SetupSuite() {
 	var err error
 	s.dsn = MakeDsn(&Config{
-		Address:  "127.0.0.1:5672",
+		Address:  rabbitTestAddr,
 		User:     "guest",
 		Password: "guest"},
 	)
@@ -118,7 +122,7 @@ func (s *apiSuite) TestServe() {
 	case d := <-dec2:
 		s.Equal(d.Body, []byte(`{"f2":"b2"}`))
 	case <-time.After(5 * time.Second):
-		s.Fail("timeout. waiting answer for cor_3")
+		s.Fail("timeout. waiting answer for cor_2")
 	}
 
 	select {

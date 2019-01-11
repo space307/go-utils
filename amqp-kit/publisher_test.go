@@ -15,7 +15,7 @@ type pubSuite struct {
 
 func (s *pubSuite) SetupSuite() {
 	s.dsn = MakeDsn(&Config{
-		"127.0.0.1:5672",
+		rabbitTestAddr,
 		"guest",
 		"guest",
 		"",

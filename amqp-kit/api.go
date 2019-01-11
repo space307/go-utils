@@ -1,11 +1,9 @@
 package amqp_kit
 
 import (
-	"log"
 	"net/url"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -26,65 +24,79 @@ type Config struct {
 	VirtualHost string
 }
 
+type subscriber struct {
+	k string
+	h func(deliv *amqp.Delivery)
+}
+
 type Server struct {
 	Conn *amqp.Connection
-	qk   map[string]map[string]func(deliv *amqp.Delivery)
-	subs []SubscribeInfo
 	ch   *amqp.Channel
+	subs []SubscribeInfo
 }
 
 func NewServer(s []SubscribeInfo, con *amqp.Connection) *Server {
 	return &Server{
 		Conn: con,
 		subs: s,
-		qk:   make(map[string]map[string]func(deliv *amqp.Delivery)),
 	}
 }
 
-func (s *Server) Serve() error {
-	var err error
+func (s *Server) Serve() (err error) {
 
-	s.ch, err = s.Conn.Channel()
-	if err != nil {
-		logrus.Errorf(`error create channel: %v`, err)
-		return err
+	if s.ch, err = s.Conn.Channel(); err != nil {
+		return
 	}
+
+	subscribers := make(map[string][]*subscriber)
 
 	for _, si := range s.subs {
-		sbs := NewSubscriber(si.E, si.Dec, si.Enc, si.O...)
-		f := sbs.ServeDelivery(s.ch)
-		child, ok := s.qk[si.Q]
+		subs, ok := subscribers[si.Q]
 		if !ok {
-			child = map[string]func(deliv *amqp.Delivery){}
-			s.qk[si.Q] = child
+			subs = []*subscriber{}
 		}
-		child[si.Key] = f
+		subscribers[si.Q] = append(subs, &subscriber{
+			k: si.Key,
+			h: NewSubscriber(si.E, si.Dec, si.Enc, si.O...).ServeDelivery(s.ch),
+		})
 	}
 
-	for _, sub := range s.subs {
-		msgs, err := s.ch.Consume(sub.Q, sub.Name, false, false, false, false, nil)
+	for queue, subs := range subscribers {
+		msgs, err := s.ch.Consume(queue, "", false, false, false, false, nil)
 		if err != nil {
 			return err
 		}
 
-		go func(q string) {
+		go func(ch <-chan amqp.Delivery, sbs []*subscriber) {
+			var (
+				d         amqp.Delivery
+				ok, found bool
+			)
+
 			for {
-				d, ok := <-msgs
+				select {
+				case d, ok = <-ch:
+				}
 				if !ok {
-					break
+					return
+				}
+				found = false
+
+				for _, sub := range sbs {
+					if found = d.RoutingKey == sub.k; found {
+						sub.h(&d)
+						break
+					}
 				}
 
-				if handler, exist := s.qk[q][d.RoutingKey]; !exist {
+				if !found {
 					d.Nack(false, false)
-					log.Printf(`subscribe key not found %s`, d.RoutingKey)
-				} else {
-					handler(&d)
 				}
 			}
-		}(sub.Q)
+		}(msgs, subs)
 	}
 
-	return nil
+	return
 }
 
 func (s *Server) Stop() error {
@@ -149,8 +161,4 @@ func Declare(ch *amqp.Channel, exchange string, queue string, keys []string) err
 	}
 
 	return nil
-}
-
-type PublisherServer struct {
-	Conn *amqp.Connection
 }

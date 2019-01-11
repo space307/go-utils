@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +40,7 @@ type errSuite struct {
 
 func (s *errSuite) SetupSuite() {
 	s.dsn = MakeDsn(&Config{
-		"127.0.0.1:5672",
+		rabbitTestAddr,
 		"guest",
 		"guest",
 		"",
@@ -149,15 +150,27 @@ func (s *errSuite) TestErrResponse() {
 	err = pub.Publish("test", "key.request.test", `cor_1`, []byte(`{"f":"b"}`))
 	s.NoError(err)
 
-	d := <-dec1
-	s.Equal(d.Body, []byte(`{"f":"b"}`))
+	select {
+	case d := <-dec1:
+		s.Equal(d.Body, []byte(`{"f":"b"}`))
+	case <-time.After(5 * time.Second):
+		s.Fail("timeout. waiting answer on dec1")
+	}
 
-	d = <-dec2
-	s.Equal(d.Body, []byte(`{"data":{"foo":"bar"}}`))
+	select {
+	case d := <-dec2:
+		s.Equal(d.Body, []byte(`{"data":{"foo":"bar"}}`))
+	case <-time.After(5 * time.Second):
+		s.Fail("timeout. waiting answer on dec2")
+	}
 
 	err = pub.Publish("test", "key.request-err.test", `cor_2`, []byte(`{"f":"b1"}`))
 	s.NoError(err)
 
-	d = <-dec2
-	s.EqualValues(d.Body, []byte(`{"error":{"code":"err_message","message":"err-message","status_code":400}}`))
+	select {
+	case d := <-dec2:
+		s.EqualValues(d.Body, []byte(`{"error":{"code":"err_message","message":"err-message","status_code":400}}`))
+	case <-time.After(5 * time.Second):
+		s.Fail("timeout. waiting answer on dec2")
+	}
 }
