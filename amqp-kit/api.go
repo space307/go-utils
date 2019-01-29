@@ -8,13 +8,14 @@ import (
 )
 
 type SubscribeInfo struct {
-	Q    string
-	Name string
-	Key  string
-	E    endpoint.Endpoint
-	Dec  DecodeRequestFunc
-	Enc  EncodeResponseFunc
-	O    []SubscriberOption
+	Q       string
+	Name    string
+	Key     string
+	Workers int
+	E       endpoint.Endpoint
+	Dec     DecodeRequestFunc
+	Enc     EncodeResponseFunc
+	O       []SubscriberOption
 }
 
 type Config struct {
@@ -55,9 +56,14 @@ func (s *Server) Serve() (err error) {
 		if !ok {
 			subs = []*subscriber{}
 		}
+		workers := 1
+		if si.Workers > 0 {
+			workers = si.Workers
+		}
 		subscribers[si.Q] = append(subs, &subscriber{
 			k: si.Key,
 			h: NewSubscriber(si.E, si.Dec, si.Enc, si.O...).ServeDelivery(s.ch),
+			c: workers,
 		})
 	}
 
@@ -67,33 +73,35 @@ func (s *Server) Serve() (err error) {
 			return err
 		}
 
-		go func(ch <-chan amqp.Delivery, sbs []*subscriber) {
-			var (
-				d         amqp.Delivery
-				ok, found bool
-			)
+		for i := 0; i < subs.c; i++ {
+			go func(ch <-chan amqp.Delivery, sbs []*subscriber) {
+				var (
+					d         amqp.Delivery
+					ok, found bool
+				)
 
-			for {
-				select {
-				case d, ok = <-ch:
-				}
-				if !ok {
-					return
-				}
-				found = false
+				for {
+					select {
+					case d, ok = <-ch:
+					}
+					if !ok {
+						return
+					}
+					found = false
 
-				for _, sub := range sbs {
-					if found = d.RoutingKey == sub.k; found {
-						sub.h(&d)
-						break
+					for _, sub := range sbs {
+						if found = d.RoutingKey == sub.k; found {
+							sub.h(&d)
+							break
+						}
+					}
+
+					if !found {
+						d.Nack(false, false)
 					}
 				}
-
-				if !found {
-					d.Nack(false, false)
-				}
-			}
-		}(msgs, subs)
+			}(msgs, subs)
+		}
 	}
 
 	return
