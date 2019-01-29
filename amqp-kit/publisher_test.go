@@ -137,7 +137,7 @@ func (s *pubSuite) TestPublishWithTracing() {
 	s.NoError(err)
 
 	//declare and serve
-	err = Declare(ch, `foo`, `test-p`,
+	err = Declare(ch, `foo`, `test-trace`,
 		[]string{`test.key`})
 	s.NoError(err)
 
@@ -145,7 +145,7 @@ func (s *pubSuite) TestPublishWithTracing() {
 
 	subs := []SubscribeInfo{
 		{
-			Q:    `test-p`,
+			Q:    `test-trace`,
 			Name: ``,
 			Key:  `test.key`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {

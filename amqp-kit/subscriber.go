@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/opentracing-contrib/go-amqp/amqptracer"
+	"github.com/opentracing/opentracing-go"
 	"github.com/streadway/amqp"
 )
 
@@ -87,6 +89,17 @@ func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
 		for _, f := range s.before {
 			ctx = f(ctx, &pub)
 		}
+
+		//extract tracing headers
+		spCtx, _ := amqptracer.Extract(deliv.Headers)
+		sp := opentracing.StartSpan(
+			"ConsumeMessage",
+			opentracing.FollowsFrom(spCtx),
+		)
+		defer sp.Finish()
+
+		// Update the context with the span for the subsequent reference.
+		ctx = opentracing.ContextWithSpan(ctx, sp)
 
 		request, err := s.dec(ctx, deliv)
 
