@@ -73,6 +73,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
+	github.com/opentracing-contrib/go-amqp v0.0.0-20171102191528-e26701f95620
 	github.com/opentracing/opentracing-go v1.0.2
 	github.com/ory/dockertest v3.3.2+incompatible // indirect
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/opentracing-contrib/go-amqp/amqptracer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/streadway/amqp"
@@ -134,12 +135,71 @@ func (s *pubSuite) TestPublishWithTracing() {
 
 	ch, err := conn.Channel()
 	s.NoError(err)
+
+	//declare and serve
+	err = Declare(ch, `foo`, `test-p`,
+		[]string{`test.key`})
+	s.NoError(err)
+
+	dec1 := make(chan *amqp.Delivery)
+
+	subs := []SubscribeInfo{
+		{
+			Q:    `test-p`,
+			Name: ``,
+			Key:  `test.key`,
+			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
+				res := struct {
+					Foo string `json:"foo"`
+				}{Foo: "bar"}
+				return res, nil
+			},
+			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
+				s.Equal(delivery.RoutingKey, `test.key`)
+				dec1 <- delivery
+
+				return delivery.Body, nil
+			},
+			Enc: EncodeJSONResponse,
+			O: []SubscriberOption{
+				SubscriberAfter(
+					SetAckAfterEndpoint(false),
+				),
+				SubscriberBefore(
+					SetPublishExchange(`foo`),
+					SetPublishKey(`key.response.test`),
+				),
+			},
+		},
+	}
+
+	ser := NewServer(subs, conn)
+
+	err = ser.Serve()
+	s.NoError(err)
+
+	//publish
 	pub := NewPublisher(ch)
-	err = pub.PublishWithTracing(beforeCtx, "exchange", "test.key", "ID1", []byte("test"))
+	err = pub.PublishWithTracing(beforeCtx, "foo", "test.key", "ID1", []byte("test-msg"))
 	s.NoError(err)
 
 	finishedSpans := opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
 	s.Require().Len(finishedSpans, 1)
+
+	//extract
+	d := <-dec1
+	s.Equal(d.Body, []byte(`test-msg`))
+
+	spCtx, _ := amqptracer.Extract(d.Headers)
+	sp := opentracing.StartSpan(
+		"ConsumeMessage",
+		opentracing.FollowsFrom(spCtx),
+	)
+	sp.Finish()
+
+	// Update the context with the span for the subsequent reference.
+	ctx := opentracing.ContextWithSpan(context.Background(), sp)
+	s.NotNil(ctx)
 
 	finishedSpan := finishedSpans[0]
 	s.Contains(finishedSpan.OperationName, "test.key")
@@ -147,7 +207,12 @@ func (s *pubSuite) TestPublishWithTracing() {
 	//finish all
 	beforeSpan.Finish()
 	finishedSpans = opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
-	s.Require().Len(finishedSpans, 2)
+	s.Require().Len(finishedSpans, 3)
+	//the same trace ID
 	s.Equal(finishedSpans[0].SpanContext.TraceID, finishedSpans[1].SpanContext.TraceID)
-	s.Equal(finishedSpans[0].ParentID, finishedSpans[1].SpanContext.SpanID)
+	s.Equal(finishedSpans[0].SpanContext.TraceID, finishedSpans[2].SpanContext.TraceID)
+
+	// spans:  1(consume)<-0(publish)<-2(root)
+	s.Equal(finishedSpans[0].ParentID, finishedSpans[2].SpanContext.SpanID)
+	s.Equal(finishedSpans[1].ParentID, finishedSpans[0].SpanContext.SpanID)
 }

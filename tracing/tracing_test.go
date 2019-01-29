@@ -3,62 +3,14 @@ package tracing
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"strings"
-	"testing"
-
-	"github.com/space307/go-utils/amqp-kit"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/streadway/amqp"
-	"github.com/stretchr/testify/suite"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
 )
 
-const serviceName = "test"
-
-type testSuite struct {
-	suite.Suite
-	testServer *httptest.Server
-	client     *Client
-}
-
-func (ts *testSuite) TestDoWithTracing() {
-	tracer := mocktracer.New()
-	opentracing.SetGlobalTracer(tracer)
-
-	beforeSpan := opentracing.GlobalTracer().StartSpan("to_inject").(*mocktracer.MockSpan)
-	defer beforeSpan.Finish()
-
-	req, err := http.NewRequest("", ts.testServer.URL, nil)
-	ts.NoError(err)
-
-	beforeCtx := opentracing.ContextWithSpan(context.Background(), beforeSpan)
-	_, err = ts.client.DoWithTracing(beforeCtx, req)
-	ts.NoError(err)
-
-	finishedSpans := opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
-	ts.Len(finishedSpans, 1)
-
-	finishedSpan := finishedSpans[0]
-	ts.Equal(serviceName, finishedSpan.Tag(string(ext.PeerService)))
-
-	beforeContext := beforeSpan.Context().(mocktracer.MockSpanContext)
-	ts.Equal(beforeContext.SpanID, finishedSpan.ParentID)
-
-	ts.testServer.Close()
-	_, err = ts.client.DoWithTracing(beforeCtx, req)
-	ts.Error(err)
-	finishedSpans = opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
-	ts.Len(finishedSpans, 2)
-	ts.Len(finishedSpans[1].Logs(), 1)
-}
-
-func (ts *testSuite) Test2CustomTracer() {
+func (ts *testSuite) TestCustomTracer() {
 	obs := &testObserver{}
 	tracerRoot, err := CreateTracer("newService", "", config.ContribObserver(obs))
 	ts.Require().NoError(err)
@@ -85,35 +37,6 @@ func (ts *testSuite) Test2CustomTracer() {
 	ts.Equal(first[0], second[0])
 	ts.Equal(first[0], second[2])
 	ts.NotEqual(first[0], second[1])
-}
-
-func (ts *testSuite) SetupSuite() {
-	dsn := amqp_kit.MakeDsn(&amqp_kit.Config{
-		"127.0.0.1:5672",
-		"guest",
-		"guest",
-		"",
-	})
-	conn, err := amqp.Dial(dsn)
-	ts.Require().NoError(err)
-
-	ch, err := conn.Channel()
-	ts.NoError(err)
-	pub := amqp_kit.NewPublisher(ch)
-
-	ts.client = &Client{ServiceName: serviceName, Publisher: *pub}
-	ts.testServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
-
-	tracer := mocktracer.New()
-	opentracing.SetGlobalTracer(tracer)
-}
-
-func (ts *testSuite) TearDownSuite() {
-	ts.testServer.Close()
-}
-
-func TestTracingSuite(t *testing.T) {
-	suite.Run(t, new(testSuite))
 }
 
 //observer from tests
