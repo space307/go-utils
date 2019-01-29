@@ -3,6 +3,7 @@ package amqp_kit
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/opentracing-contrib/go-amqp/amqptracer"
 	"github.com/opentracing/opentracing-go"
@@ -42,8 +43,8 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 		[]string{`key.request.test`, `key.response.test`, `key.response.unknown`})
 	s.NoError(err)
 
-	dec1 := make(chan *amqp.Delivery)
-	dec2 := make(chan *amqp.Delivery)
+	dec1 := make(chan *amqp.Delivery, 1)
+	dec2 := make(chan *amqp.Delivery, 1)
 
 	subs := []SubscribeInfo{
 		{
@@ -113,6 +114,7 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 	d = <-dec2
 	s.Equal(d.Body, []byte(`{"foo":"bar"}`))
 
+	time.Sleep(1 * time.Second)
 	err = pub.Publish("foo", "key.response.test", `cor_2`, []byte(`{"f2":"b2"}`))
 	s.NoError(err)
 
