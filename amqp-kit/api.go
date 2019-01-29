@@ -27,6 +27,7 @@ type Config struct {
 
 type subscriber struct {
 	k string
+	c int
 	h func(deliv *amqp.Delivery)
 }
 
