@@ -27,7 +27,6 @@ type Config struct {
 
 type subscriber struct {
 	k string
-	c int
 	h func(deliv *amqp.Delivery)
 }
 
@@ -51,6 +50,7 @@ func (s *Server) Serve() (err error) {
 	}
 
 	subscribers := make(map[string][]*subscriber)
+	workersnum := make(map[string]int)
 
 	for _, si := range s.subs {
 		subs, ok := subscribers[si.Q]
@@ -61,10 +61,10 @@ func (s *Server) Serve() (err error) {
 		if si.Workers > 0 {
 			workers = si.Workers
 		}
+		workersnum[si.Q] = workers
 		subscribers[si.Q] = append(subs, &subscriber{
 			k: si.Key,
 			h: NewSubscriber(si.E, si.Dec, si.Enc, si.O...).ServeDelivery(s.ch),
-			c: workers,
 		})
 	}
 
@@ -74,7 +74,9 @@ func (s *Server) Serve() (err error) {
 			return err
 		}
 
-		for i := 0; i < subs.c; i++ {
+		num := workersnum[queue]
+
+		for i := 0; i < num; i++ {
 			go func(ch <-chan amqp.Delivery, sbs []*subscriber) {
 				var (
 					d         amqp.Delivery
