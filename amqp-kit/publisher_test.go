@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/suite"
 )
@@ -118,4 +120,34 @@ func (s *pubSuite) TestSuccessfulPublisher() {
 
 	err = pub.Publish("foo", "key.response.unknown", `cor_3`, []byte(`{"f3":"b3"}`))
 	s.NoError(err)
+}
+
+func (s *pubSuite) TestPublishWithTracing() {
+	tracer := mocktracer.New()
+	opentracing.SetGlobalTracer(tracer)
+
+	beforeSpan := opentracing.GlobalTracer().StartSpan("to_pub_inject").(*mocktracer.MockSpan)
+	beforeCtx := opentracing.ContextWithSpan(context.Background(), beforeSpan)
+
+	conn, err := amqp.Dial(s.dsn)
+	s.Require().NoError(err)
+
+	ch, err := conn.Channel()
+	s.NoError(err)
+	pub := NewPublisher(ch)
+	err = pub.PublishWithTracing(beforeCtx, "exchange", "test.key", "ID1", []byte("test"))
+	s.NoError(err)
+
+	finishedSpans := opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
+	s.Require().Len(finishedSpans, 1)
+
+	finishedSpan := finishedSpans[0]
+	s.Contains(finishedSpan.OperationName, "test.key")
+
+	//finish all
+	beforeSpan.Finish()
+	finishedSpans = opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
+	s.Require().Len(finishedSpans, 2)
+	s.Equal(finishedSpans[0].SpanContext.TraceID, finishedSpans[1].SpanContext.TraceID)
+	s.Equal(finishedSpans[0].ParentID, finishedSpans[1].SpanContext.SpanID)
 }

@@ -58,30 +58,6 @@ func (ts *testSuite) TestDoWithTracing() {
 	ts.Len(finishedSpans[1].Logs(), 1)
 }
 
-func (ts *testSuite) TestPublishWithTracing() {
-	tracer := mocktracer.New()
-	opentracing.SetGlobalTracer(tracer)
-
-	beforeSpan := opentracing.GlobalTracer().StartSpan("to_pub_inject").(*mocktracer.MockSpan)
-	beforeCtx := opentracing.ContextWithSpan(context.Background(), beforeSpan)
-
-	err := ts.client.PublishWithTracing(beforeCtx, "exchange", "test.key", "ID1", []byte("test"))
-	ts.NoError(err)
-
-	finishedSpans := opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
-	ts.Require().Len(finishedSpans, 1)
-
-	finishedSpan := finishedSpans[0]
-	ts.Contains(finishedSpan.OperationName, "test.key")
-
-	//finish all
-	beforeSpan.Finish()
-	finishedSpans = opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
-	ts.Require().Len(finishedSpans, 2)
-	ts.Equal(finishedSpans[0].SpanContext.TraceID, finishedSpans[1].SpanContext.TraceID)
-	ts.Equal(finishedSpans[0].ParentID, finishedSpans[1].SpanContext.SpanID)
-}
-
 func (ts *testSuite) Test2CustomTracer() {
 	obs := &testObserver{}
 	tracerRoot, err := CreateTracer("newService", "", config.ContribObserver(obs))
@@ -136,7 +112,7 @@ func (ts *testSuite) TearDownSuite() {
 	ts.testServer.Close()
 }
 
-func TestEventsSuite(t *testing.T) {
+func TestTracingSuite(t *testing.T) {
 	suite.Run(t, new(testSuite))
 }
 

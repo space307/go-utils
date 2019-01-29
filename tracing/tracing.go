@@ -52,35 +52,6 @@ func (c *Client) DoWithTracing(ctx context.Context, req *http.Request) (resp *ht
 	return resp, nil
 }
 
-//publish message to AMQP with tracing
-func (c *Client) PublishWithTracing(ctx context.Context, exchange, key, corID string, body []byte) (err error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, `publish_key: `+key)
-	defer span.Finish()
-
-	ext.PeerService.Set(span, c.ServiceName)
-	ext.SpanKind.Set(span, ext.SpanKindProducerEnum)
-
-	var headers = make(http.Header)
-	headers.Add("exchange", exchange)
-	headers.Add("key", key)
-	headers.Add("corID", corID)
-	span.Tracer().Inject(
-		span.Context(),
-		opentracing.HTTPHeaders,
-		opentracing.HTTPHeadersCarrier(headers),
-	)
-
-	err = c.Publisher.Publish(exchange, key, corID, body)
-	if err != nil {
-		span.LogFields(logop.Error(err))
-		ext.Error.Set(span, true)
-
-		return err
-	}
-
-	return nil
-}
-
 // create custom Tracer
 func CreateTracer(serviceName, agentAddress string, opts ...jaegercfg.Option) (*Tracer, error) {
 	jcfg := jaegercfg.Configuration{
