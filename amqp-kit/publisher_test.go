@@ -2,6 +2,7 @@ package amqp_kit
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
 
@@ -210,6 +211,7 @@ func (s *pubSuite) TestPublishWithTracing() {
 	beforeSpan.Finish()
 	finishedSpans = opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
 	s.Require().Len(finishedSpans, 3)
+	log.Printf("%+v", finishedSpans)
 	//the same trace ID
 	s.Equal(finishedSpans[0].SpanContext.TraceID, finishedSpans[1].SpanContext.TraceID)
 	s.Equal(finishedSpans[0].SpanContext.TraceID, finishedSpans[2].SpanContext.TraceID)
