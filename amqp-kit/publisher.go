@@ -2,6 +2,7 @@ package amqp_kit
 
 import (
 	"context"
+	"log"
 
 	"github.com/opentracing-contrib/go-amqp/amqptracer"
 	"github.com/opentracing/opentracing-go"
@@ -55,7 +56,7 @@ func (p *Publisher) PublishWithTracing(ctx context.Context, exchange, key, corID
 
 	// Inject the span context into the AMQP header.
 	if err := amqptracer.Inject(span, msg.Headers); err != nil {
-		return err
+		log.Printf("publish: error inject headers: %s", err)
 	}
 
 	return p.ch.Publish(exchange, key, false, false, msg)
