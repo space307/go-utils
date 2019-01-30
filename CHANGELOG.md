@@ -1,6 +1,6 @@
 # Changelog
 
-##  [2.0.1] - 2019-01-30
+##  [2.1.0] - 2019-01-30
 ### Change
 - added publish with tracing
 - added create custom tracer
