@@ -4,6 +4,7 @@
 ### Change
 - added publish with tracing
 - added create custom tracer
+- added amqp decode with trace and enpoint with trace
 - removed err return in http do with tracing
 
 ## [2.0.0] - 2018-11-23
