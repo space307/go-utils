@@ -29,19 +29,17 @@ func DecodeWithTrace(next DecodeRequestFunc, operationName string) DecodeRequest
 }
 
 // set operation name for parent span, started in subscriber.go
-// if span not found, start new span
+// if span not found, start new span with given tracer
 func TraceEndpoint(tracer opentracing.Tracer, operationName string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (interface{}, error) {
-			var opts opentracing.SpanReference
 			parentSpan := opentracing.SpanFromContext(ctx)
 			if parentSpan != nil {
 				parentSpan.SetOperationName(operationName)
 			} else {
-				parentSpan = tracer.StartSpan(operationName, opts)
+				parentSpan = tracer.StartSpan(operationName)
+				defer parentSpan.Finish()
 			}
-
-			defer parentSpan.Finish()
 
 			otext.SpanKindRPCServer.Set(parentSpan)
 			ctx = opentracing.ContextWithSpan(ctx, parentSpan)

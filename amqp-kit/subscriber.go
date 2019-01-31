@@ -96,7 +96,8 @@ func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
 			"ConsumeMessage",
 			opentracing.FollowsFrom(spCtx),
 		)
-		//defer sp.Finish()
+		defer sp.Finish()
+
 		// Update the context with the span for the subsequent reference.
 		ctx = opentracing.ContextWithSpan(ctx, sp)
 
