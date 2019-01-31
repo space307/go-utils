@@ -6,12 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/space307/go-utils/amqp-kit"
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -55,20 +52,7 @@ func (ts *testSuite) TestDoWithTracing() {
 }
 
 func (ts *testSuite) SetupSuite() {
-	dsn := amqp_kit.MakeDsn(&amqp_kit.Config{
-		"127.0.0.1:5672",
-		"guest",
-		"guest",
-		"",
-	})
-	conn, err := amqp.Dial(dsn)
-	ts.Require().NoError(err)
-
-	ch, err := conn.Channel()
-	ts.NoError(err)
-	pub := amqp_kit.NewPublisher(ch)
-
-	ts.client = &Client{ServiceName: serviceName, Publisher: *pub}
+	ts.client = &Client{ServiceName: serviceName}
 	ts.testServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	tracer := mocktracer.New()
