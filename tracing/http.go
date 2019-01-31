@@ -5,15 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/space307/go-utils/amqp-kit"
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	logop "github.com/opentracing/opentracing-go/log"
 )
 
 type Client struct {
-	amqp_kit.Publisher
 	http.Client
 	ServiceName string
 }
