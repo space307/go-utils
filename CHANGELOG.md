@@ -1,5 +1,12 @@
 # Changelog
 
+##  [2.1.0] - 2019-01-30
+### Change
+- added publish with tracing
+- added create custom tracer
+- added amqp decode with trace and enpoint with trace
+- removed err return in http do with tracing
+
 ## [2.0.0] - 2018-11-23
 ### Change
 - VaultTransition interface
