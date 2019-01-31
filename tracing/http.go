@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/space307/go-utils/amqp-kit"
@@ -34,10 +35,12 @@ func (c *Client) DoWithTracing(ctx context.Context, req *http.Request) (resp *ht
 	resp, err = c.Do(req)
 	if err != nil {
 		span.LogFields(logop.Error(err))
-		return resp, err
+		log.Printf("http: request error: %s", err)
 	}
 
-	ext.HTTPStatusCode.Set(span, uint16(resp.StatusCode))
+	if resp != nil {
+		ext.HTTPStatusCode.Set(span, uint16(resp.StatusCode))
+	}
 
-	return resp, nil
+	return resp, err
 }
