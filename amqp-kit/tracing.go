@@ -11,7 +11,7 @@ import (
 
 // Rename parent span if decoder finished with error.
 // Also set an error in tag.
-func DecodeWithTrace(tracer opentracing.Tracer, operationName string, next DecodeRequestFunc) DecodeRequestFunc {
+func DecodeWithTrace(next DecodeRequestFunc, operationName string) DecodeRequestFunc {
 	return func(ctx context.Context, r *amqp.Delivery) (i interface{}, err error) {
 		i, err = next(ctx, r)
 		if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil && err != nil {
