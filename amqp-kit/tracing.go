@@ -4,32 +4,27 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/opentracing-contrib/go-amqp/amqptracer"
 	"github.com/opentracing/opentracing-go"
 	otext "github.com/opentracing/opentracing-go/ext"
 	"github.com/streadway/amqp"
 )
 
-func DecodeWithTrace(next DecodeRequestFunc, operationName string) DecodeRequestFunc {
+// Rename parent span if decoder finished with error.
+// Also set an error in tag.
+func DecodeWithTrace(tracer opentracing.Tracer, operationName string, next DecodeRequestFunc) DecodeRequestFunc {
 	return func(ctx context.Context, r *amqp.Delivery) (i interface{}, err error) {
-		//extract tracing headers
-		spCtx, _ := amqptracer.Extract(r.Headers)
-		sp := opentracing.StartSpan(
-			operationName,
-			opentracing.FollowsFrom(spCtx),
-		)
-		defer sp.Finish()
+		i, err = next(ctx, r)
+		if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil && err != nil {
+			parentSpan.SetOperationName(operationName)
+			parentSpan.SetTag("decode_error", err.Error())
+		}
 
-		// Update the context with the span for the subsequent reference.
-		otext.SpanKindRPCServer.Set(sp)
-		ctx = opentracing.ContextWithSpan(ctx, sp)
-
-		return next(ctx, r)
+		return i, err
 	}
 }
 
-// set operation name for parent span, started in subscriber.go
-// if span not found, start new span with given tracer
+// Set operation name for parent span, started in subscriber.go.
+// If span not found, start new span with given tracer.
 func TraceEndpoint(tracer opentracing.Tracer, operationName string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (interface{}, error) {
