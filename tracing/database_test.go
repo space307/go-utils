@@ -137,8 +137,8 @@ func (s *testDBSuite) SetupSuite() {
 	s.db, err = Init("postgres", cfg)
 	s.NoError(err)
 
-	_, err = s.db.ExtDB.Exec("DROP TABLE t1;")
-	_, err = s.db.ExtDB.Exec("CREATE TABLE IF NOT EXISTS t1(id integer,v integer,CONSTRAINT t1_pkey PRIMARY KEY (id),CONSTRAINT t1_v_key UNIQUE (v));")
+	_, err = s.db.GetExtDatabase().Exec("DROP TABLE t1;")
+	_, err = s.db.GetExtDatabase().Exec("CREATE TABLE IF NOT EXISTS t1(id integer,v integer,CONSTRAINT t1_pkey PRIMARY KEY (id),CONSTRAINT t1_v_key UNIQUE (v));")
 	s.Require().NoError(err)
 
 	tracer := mocktracer.New()

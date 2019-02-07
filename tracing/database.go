@@ -13,13 +13,18 @@ import (
 // Database is a object extended database.Database struct
 // for use with context and tracing
 type Database struct {
-	ExtDB *database.Database
+	extDB *database.Database
 }
 
 // Init creates a storage object based on a given config.
 func Init(driver string, config *database.Config) (*Database, error) {
 	extDB, err := database.Init(driver, config)
-	return &Database{ExtDB: extDB}, err
+	return &Database{extDB: extDB}, err
+}
+
+// GetExtDatabase getter for database.Database object
+func (d *Database) GetExtDatabase() *database.Database {
+	return d.extDB
 }
 
 // Exec function with context and create tracing span
@@ -27,7 +32,7 @@ func (d *Database) Exec(ctx context.Context, query string, args ...interface{}) 
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
 
-	res, err := d.ExtDB.Exec(query, args...)
+	res, err := d.extDB.Exec(query, args...)
 
 	if err != nil {
 		span.LogFields(log.String("error", err.Error()))
@@ -41,7 +46,7 @@ func (d *Database) QueryRow(ctx context.Context, query string, args ...interface
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
 
-	rows, err := d.ExtDB.QueryRow(query, args...)
+	rows, err := d.extDB.QueryRow(query, args...)
 	if err != nil {
 		span.LogFields(log.String("error", err.Error()))
 	}
@@ -54,7 +59,7 @@ func (d *Database) Query(ctx context.Context, query string, args ...interface{})
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
 
-	rows, err := d.ExtDB.Query(query, args...)
+	rows, err := d.extDB.Query(query, args...)
 	if err != nil {
 		span.LogFields(log.String("error", err.Error()))
 	}
@@ -67,7 +72,7 @@ func (d *Database) Query(ctx context.Context, query string, args ...interface{})
 func (d *Database) StartTransaction(ctx context.Context) (context.Context, *database.TxConnection, error) {
 	span, ctx := d.createSpanFromContext(ctx, `startTransaction`)
 
-	tx, err := d.ExtDB.StartTransaction()
+	tx, err := d.extDB.StartTransaction()
 	if err != nil {
 		span.LogFields(log.String("error", err.Error()))
 	}
@@ -143,11 +148,11 @@ func (d *Database) createSpanFromContext(ctx context.Context, query string) (ope
 	span, ctx := opentracing.StartSpanFromContext(ctx, query)
 
 	ext.PeerService.Set(span, `db`)
-	ext.PeerAddress.Set(span, d.ExtDB.GetConfig().Addr)
+	ext.PeerAddress.Set(span, d.extDB.GetConfig().Addr)
 	ext.SpanKind.Set(span, ext.SpanKindRPCServerEnum)
 	ext.DBStatement.Set(span, query)
 	ext.DBType.Set(span, `sql`)
-	ext.DBUser.Set(span, d.ExtDB.GetConfig().User)
+	ext.DBUser.Set(span, d.extDB.GetConfig().User)
 
 	return span, ctx
 }
