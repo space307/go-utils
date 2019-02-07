@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.1] - 2018-11-23
+### Change
+- add Workers as param for amqp_kit.SubscribeInfo
+
+
 ## [2.0.0] - 2018-11-23
 ### Change
 - VaultTransition interface
