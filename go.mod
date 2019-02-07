@@ -1,4 +1,4 @@
-module github.com/space307/go-utils
+module github.com/andboson/go-utils
 
 require (
 	cloud.google.com/go v0.33.1 // indirect
