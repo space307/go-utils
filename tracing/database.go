@@ -10,16 +10,19 @@ import (
 	"github.com/space307/go-utils/database"
 )
 
+// Database is a object extended database.Database struct
+// for use with context and tracing
 type Database struct {
 	ExtDB *database.Database
 }
 
+// Init creates a storage object based on a given config.
 func Init(driver string, config *database.Config) (*Database, error) {
 	extDB, err := database.Init(driver, config)
 	return &Database{ExtDB: extDB}, err
 }
 
-//execute http-request with tracing
+// Exec function with context and create tracing span
 func (d *Database) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
@@ -33,6 +36,7 @@ func (d *Database) Exec(ctx context.Context, query string, args ...interface{}) 
 	return res, err
 }
 
+// QueryRow function with context and create tracing span
 func (d *Database) QueryRow(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
@@ -45,6 +49,7 @@ func (d *Database) QueryRow(ctx context.Context, query string, args ...interface
 	return rows, err
 }
 
+// Query function with context and create tracing span
 func (d *Database) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
@@ -57,6 +62,8 @@ func (d *Database) Query(ctx context.Context, query string, args ...interface{})
 	return rows, err
 }
 
+// StartTransaction start transaction, start tracing span
+// and return context, TxConnection and error
 func (d *Database) StartTransaction(ctx context.Context) (context.Context, *database.TxConnection, error) {
 	span, ctx := d.createSpanFromContext(ctx, `startTransaction`)
 
@@ -68,6 +75,7 @@ func (d *Database) StartTransaction(ctx context.Context) (context.Context, *data
 	return opentracing.ContextWithSpan(ctx, span), tx, err
 }
 
+// Rollback try to rollback transaction and close open span
 func (d *Database) Rollback(ctx context.Context, conn *database.TxConnection) error {
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
@@ -82,6 +90,7 @@ func (d *Database) Rollback(ctx context.Context, conn *database.TxConnection) er
 	return err
 }
 
+// Commit try to commit transaction and close open span
 func (d *Database) Commit(ctx context.Context, conn *database.TxConnection) error {
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
@@ -96,6 +105,7 @@ func (d *Database) Commit(ctx context.Context, conn *database.TxConnection) erro
 	return err
 }
 
+// ExecInsideTransaction execute sql Exec function and create span
 func (d *Database) ExecInsideTransaction(ctx context.Context, conn *database.TxConnection, query string, args ...interface{}) (sql.Result, error) {
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
@@ -108,6 +118,7 @@ func (d *Database) ExecInsideTransaction(ctx context.Context, conn *database.TxC
 	return rows, err
 }
 
+// QueryInsideTransaction execute sql Query function and create span
 func (d *Database) QueryInsideTransaction(ctx context.Context, conn *database.TxConnection, query string, args ...interface{}) (*sql.Rows, error) {
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
@@ -120,6 +131,7 @@ func (d *Database) QueryInsideTransaction(ctx context.Context, conn *database.Tx
 	return rows, err
 }
 
+// QueryInsideTransaction execute sql QueryRow function and create span
 func (d *Database) QueryRowInsideTransaction(ctx context.Context, conn *database.TxConnection, query string, args ...interface{}) *sql.Row {
 	span, _ := d.createSpanFromContext(ctx, query)
 	defer span.Finish()
