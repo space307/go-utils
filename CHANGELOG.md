@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.0]
+### Add
+- add tracing database
+### Change
+- 1.11.2 to travis.yml
+
 ##  [2.1.0] - 2019-01-30
 ### Change
 - added publish with tracing
