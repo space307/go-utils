@@ -4,47 +4,36 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/opentracing-contrib/go-amqp/amqptracer"
 	"github.com/opentracing/opentracing-go"
 	otext "github.com/opentracing/opentracing-go/ext"
-	"github.com/streadway/amqp"
 )
 
-func DecodeWithTrace(next DecodeRequestFunc, operationName string) DecodeRequestFunc {
-	return func(ctx context.Context, r *amqp.Delivery) (i interface{}, err error) {
-		//extract tracing headers
-		spCtx, _ := amqptracer.Extract(r.Headers)
-		sp := opentracing.StartSpan(
-			operationName,
-			opentracing.FollowsFrom(spCtx),
-		)
-		defer sp.Finish()
+const tagError = "error"
 
-		// Update the context with the span for the subsequent reference.
-		otext.SpanKindRPCServer.Set(sp)
-		ctx = opentracing.ContextWithSpan(ctx, sp)
+type amqpSpanCtx string
 
-		return next(ctx, r)
-	}
-}
+var amqpCtx amqpSpanCtx
 
-// set operation name for parent span, started in subscriber.go
-// if span not found, start new span with given tracer
+// Get context value spanContext and start Span with given operationName.
+// Set an error as tag if raised.
 func TraceEndpoint(tracer opentracing.Tracer, operationName string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (interface{}, error) {
-			parentSpan := opentracing.SpanFromContext(ctx)
-			if parentSpan != nil {
-				parentSpan.SetOperationName(operationName)
-			} else {
-				parentSpan = tracer.StartSpan(operationName)
-				defer parentSpan.Finish()
+			var sp opentracing.Span
+			if spCtx, ok := ctx.Value(amqpCtx).(*opentracing.SpanContext); ok {
+				sp = tracer.StartSpan(operationName, opentracing.FollowsFrom(*spCtx))
+				defer sp.Finish()
+
+				otext.SpanKindRPCServer.Set(sp)
+				ctx = opentracing.ContextWithSpan(ctx, sp)
 			}
 
-			otext.SpanKindRPCServer.Set(parentSpan)
-			ctx = opentracing.ContextWithSpan(ctx, parentSpan)
+			i, err := next(ctx, request)
+			if err != nil && sp != nil {
+				sp.SetTag(tagError, err.Error())
+			}
 
-			return next(ctx, request)
+			return i, err
 		}
 	}
 }
