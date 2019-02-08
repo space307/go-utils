@@ -1,5 +1,10 @@
 # Changelog
 
+
+##  [2.3.0] - 2019-02-08
+### Change
+- fixed opentracing span creation in amqp_kit
+
 ## [2.2.0]
 ### Add
 - add tracing database
