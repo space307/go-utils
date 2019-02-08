@@ -9,8 +9,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-const ampqCtx = "amqp_ctx"
-
 // Channel is a channel interface to make testing possible
 // It is highly recommended to use *amqp.Channel as the interface implementation
 type Channel interface {
