@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFoo_bar(t *testing.T) {
+func TestConsulWrapper(t *testing.T) {
 	srv1, err := testutil.NewTestServerConfig(func(c *testutil.TestServerConfig) {
 		c.Ports.HTTP = 8500
 	})
