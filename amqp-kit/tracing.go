@@ -8,7 +8,8 @@ import (
 	otext "github.com/opentracing/opentracing-go/ext"
 )
 
-// Extract
+// Get context value spanContext and start Span with given operationName.
+// Set an error as tag if raised.
 func TraceEndpoint(tracer opentracing.Tracer, operationName string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (interface{}, error) {
