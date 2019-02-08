@@ -3,7 +3,7 @@ go:
   - 1.11.2
 
 script:
-  - go test ./...
+  - go test -v ./...
 
 services:
   - mysql
