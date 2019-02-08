@@ -15,6 +15,7 @@
 10. [json_formatter.go](#formatter)
 11. [messagebus.go](#messagebus)
 12. [amqp-kit](#amqp-kit)
+13. [consul](#consul)
 
 <a name="debug" />
 
@@ -147,3 +148,10 @@ func main() {
 AMQP wrapper in go-kit style
 
 see test example for use: [publisher_test.go](https://github.com/space307/go-utils/blob/master/amqp-kit/publisher_test.go)
+
+
+<a name="consul" />
+
+### 13. consul
+
+Consul package contains a wrapper for Consul API for simplicity registration a service in the local agent.
