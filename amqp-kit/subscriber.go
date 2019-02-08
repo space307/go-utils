@@ -91,7 +91,7 @@ func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
 
 		//extract tracing headers and start root span
 		spCtx, _ := amqptracer.Extract(deliv.Headers)
-		ctx = context.WithValue(ctx, ampqCtx, &spCtx)
+		ctx = context.WithValue(ctx, amqpCtx, &spCtx)
 
 		request, err := s.dec(ctx, deliv)
 

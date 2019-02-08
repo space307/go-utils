@@ -133,7 +133,7 @@ func (s *subsSuite) TestSubscriberTracing() {
 
 	finishedSpans = opentracing.GlobalTracer().(*mocktracer.MockTracer).FinishedSpans()
 	s.Len(finishedSpans, 2)
-	s.Equal(finishedSpans[1].Tag(tegError), "endpoint_error_resp")
+	s.Equal(finishedSpans[1].Tag(tagError), "endpoint_error_resp")
 
 	err = ser.Stop()
 	s.Require().NoError(err)

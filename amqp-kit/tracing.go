@@ -8,11 +8,11 @@ import (
 	otext "github.com/opentracing/opentracing-go/ext"
 )
 
-const tegError = "error"
+const tagError = "error"
 
-type ampqSpanCtx string
+type amqpSpanCtx string
 
-var ampqCtx ampqSpanCtx
+var amqpCtx amqpSpanCtx
 
 // Get context value spanContext and start Span with given operationName.
 // Set an error as tag if raised.
@@ -20,7 +20,7 @@ func TraceEndpoint(tracer opentracing.Tracer, operationName string) endpoint.Mid
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (interface{}, error) {
 			var sp opentracing.Span
-			if spCtx, ok := ctx.Value(ampqCtx).(*opentracing.SpanContext); ok {
+			if spCtx, ok := ctx.Value(amqpCtx).(*opentracing.SpanContext); ok {
 				sp = tracer.StartSpan(operationName, opentracing.FollowsFrom(*spCtx))
 				defer sp.Finish()
 
@@ -30,7 +30,7 @@ func TraceEndpoint(tracer opentracing.Tracer, operationName string) endpoint.Mid
 
 			i, err := next(ctx, request)
 			if err != nil && sp != nil {
-				sp.SetTag(tegError, err.Error())
+				sp.SetTag(tagError, err.Error())
 			}
 
 			return i, err
