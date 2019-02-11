@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/opentracing-contrib/go-amqp/amqptracer"
 	"github.com/streadway/amqp"
 )
 
@@ -87,6 +88,10 @@ func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
 		for _, f := range s.before {
 			ctx = f(ctx, &pub)
 		}
+
+		//extract tracing headers and start root span
+		spCtx, _ := amqptracer.Extract(deliv.Headers)
+		ctx = context.WithValue(ctx, amqpCtx, &spCtx)
 
 		request, err := s.dec(ctx, deliv)
 

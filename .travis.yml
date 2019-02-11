@@ -1,7 +1,7 @@
 language: go
 go:
-  - 1.11.x
-  
+  - 1.11.2
+
 script:
   - go test ./...
 
@@ -10,8 +10,13 @@ services:
   - postgresql
   - rabbitmq
 
+env:
+- CONSUL_VERSION=1.4.2
+
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS db_test;'
+  - curl -sLo consul.zip https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
+  - unzip consul.zip -d $HOME/bin
 
 before_script:
   - psql -c 'CREATE DATABASE db_test;' -U postgres
