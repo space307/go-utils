@@ -1,9 +1,13 @@
 package consul
 
 import (
-	"github.com/hashicorp/consul/agent/consul"
 	"github.com/hashicorp/consul/api"
 )
+
+// TTLUpdater is an interface to update the TTL of service
+type TTLUpdater interface {
+	UpdateTTL(checkID, status, output string) error
+}
 
 // Client provides a client to functions of Consul API
 // for one serivce
@@ -13,18 +17,12 @@ type Client struct {
 }
 
 // NewDefaultClient is the most default constructor for Consul agent for one serivce.
-// This function gets the local IP address and register service for a local agent with a given name.
-// It ignores errors if Consul agent is unreachable.
+// It initializes HTTP client for a local agent and register service on it.
 // srvName sets for ID, Name and CheckID of service.
-func NewDefaultClient(srvName string, svcPort int, checkTTL string) (*Client, error) {
+func NewDefaultClient(srvName, localIP string, svcPort int, checkTTL string) (*Client, error) {
 	var err error
 
 	client := &Client{srvID: srvName}
-
-	localIP, err := consul.GetPrivateIP()
-	if err != nil {
-		return nil, err
-	}
 
 	client.clientAPI, err = api.NewClient(api.DefaultConfig())
 	if err != nil {
@@ -34,7 +32,7 @@ func NewDefaultClient(srvName string, svcPort int, checkTTL string) (*Client, er
 	srvRegInfo := &api.AgentServiceRegistration{
 		ID:      srvName,
 		Name:    srvName,
-		Address: localIP.String(),
+		Address: localIP,
 		Port:    svcPort,
 		Check: &api.AgentServiceCheck{
 			CheckID: srvName,
@@ -42,7 +40,7 @@ func NewDefaultClient(srvName string, svcPort int, checkTTL string) (*Client, er
 		},
 	}
 
-	if err = client.Register(srvRegInfo); err != nil && client.IsReachable() {
+	if err = client.Register(srvRegInfo); err != nil {
 		return nil, err
 	}
 

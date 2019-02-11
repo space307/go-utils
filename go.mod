@@ -5,6 +5,7 @@ require (
 	github.com/Azure/azure-sdk-for-go v25.0.0+incompatible // indirect
 	github.com/Azure/go-autorest v11.4.0+incompatible // indirect
 	github.com/SAP/go-hdb v0.13.2 // indirect
+	github.com/SermoDigital/jose v0.9.2-0.20161205224733-f6df55f235c2 // indirect
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20190203032130-408505a5fba8 // indirect
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 // indirect
@@ -14,7 +15,6 @@ require (
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/centrify/cloud-golang-sdk v0.0.0-20180119173102-7c97cc6fde16 // indirect
 	github.com/chrismalek/oktasdk-go v0.0.0-20181212195951-3430665dfaa0 // indirect
-	github.com/circonus-labs/circonus-gometrics v2.2.6+incompatible // indirect
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
 	github.com/coreos/etcd v3.3.11+incompatible // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
-	github.com/hashicorp/consul v1.4.1
+	github.com/hashicorp/consul v1.4.2
 	github.com/hashicorp/go-gcp-common v0.0.0-20180425173946-763e39302965 // indirect
 	github.com/hashicorp/go-hclog v0.0.0-20190109152822-4783caec6f2e // indirect
 	github.com/hashicorp/go-plugin v0.0.0-20190129155509-362c99b11937 // indirect

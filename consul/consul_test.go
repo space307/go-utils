@@ -16,8 +16,9 @@ func TestConsulWrapper(t *testing.T) {
 	}
 
 	serviceName := "testService"
-	client, err := NewDefaultClient(serviceName, 8080, "10m")
+	client, err := NewDefaultClient(serviceName, `127.0.0.1`, 8080, "10m")
 	assert.NoError(t, err)
+	assert.Implements(t, (*TTLUpdater)(nil), client)
 
 	consulAgent := client.Agent()
 
@@ -56,7 +57,9 @@ func TestConsulWrapper(t *testing.T) {
 
 	srv1.Stop()
 
-	client, err = NewDefaultClient(serviceName, 8080, "10m")
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+	assert.False(t, client.IsReachable())
+
+	client, err = NewDefaultClient(serviceName, `127.0.0.1`, 8080, "10m")
+	assert.Error(t, err)
+	assert.Nil(t, client)
 }
