@@ -5,6 +5,7 @@ require (
 	github.com/Azure/azure-sdk-for-go v25.0.0+incompatible // indirect
 	github.com/Azure/go-autorest v11.4.0+incompatible // indirect
 	github.com/SAP/go-hdb v0.13.2 // indirect
+	github.com/SermoDigital/jose v0.9.2-0.20161205224733-f6df55f235c2 // indirect
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20190203032130-408505a5fba8 // indirect
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 // indirect
@@ -46,7 +47,7 @@ require (
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
-	github.com/hashicorp/consul v1.4.2 // indirect
+	github.com/hashicorp/consul v1.4.2
 	github.com/hashicorp/go-gcp-common v0.0.0-20180425173946-763e39302965 // indirect
 	github.com/hashicorp/go-hclog v0.0.0-20190109152822-4783caec6f2e // indirect
 	github.com/hashicorp/go-plugin v0.0.0-20190129155509-362c99b11937 // indirect
@@ -54,7 +55,10 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.0 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.1 // indirect
 	github.com/hashicorp/go-version v1.1.0 // indirect
+	github.com/hashicorp/hil v0.0.0-20190129155652-59d7c1fee952 // indirect
+	github.com/hashicorp/net-rpc-msgpackrpc v0.0.0-20151116020338-a14192a58a69 // indirect
 	github.com/hashicorp/nomad v0.8.7 // indirect
+	github.com/hashicorp/raft-boltdb v0.0.0-20171010151810-6e5ba93211ea // indirect
 	github.com/hashicorp/serf v0.8.2 // indirect
 	github.com/hashicorp/vault v1.0.2
 	github.com/hashicorp/vault-plugin-auth-alicloud v0.0.0-20181109180636-f278a59ca3e8 // indirect
