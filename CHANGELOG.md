@@ -1,5 +1,8 @@
 # Changelog
 
+##  [2.4.0] - 2019-02-11
+### Add
+- Consul client
 
 ##  [2.3.0] - 2019-02-08
 ### Change
@@ -24,7 +27,7 @@
 
 ## [1.1.1] - 2018-11-23
 - add amqp-kit close method
-- fix amqp-kit data race serve() method 
+- fix amqp-kit data race serve() method
 
 ## [1.0.0] - 2018-11-13
 ### Added
