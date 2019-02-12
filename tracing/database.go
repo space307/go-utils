@@ -27,7 +27,7 @@ func (d *Database) GetExtDatabase() *database.Database {
 	return d.extDB
 }
 
-// Make tracing.Database from database instance
+// Create tracing.Database from database instance
 func WrapDatabase(db *database.Database) *Database {
 	return &Database{extDB: db}
 }
