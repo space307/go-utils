@@ -1,5 +1,9 @@
 # Changelog
 
+##  [2.5.0] - 2019-02-12
+### Add
+- Tracing db wrapper
+
 ##  [2.4.0] - 2019-02-11
 ### Add
 - Consul client
