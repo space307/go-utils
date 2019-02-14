@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	rabbitTestAddr = "127.0.0.1:5672"
+	//rabbitTestAddr = "127.0.0.1:5672"
+	rabbitTestAddr = "172.17.0.2:5672"
 )
 
 type apiSuite struct {
@@ -130,5 +131,90 @@ func (s *apiSuite) TestServe() {
 		s.Equal(d.Body, []byte(`{"f3":"b3"}`))
 	case <-time.After(5 * time.Second):
 		s.Fail("timeout. waiting answer for cor_3")
+	}
+}
+
+func (s *apiSuite) TestServeMany() {
+	ch, err := s.conn.Channel()
+	s.NoError(err)
+
+	err = Declare(ch, `exc-many`, `many-a`, []string{`key.a`})
+	s.NoError(err)
+
+	err = Declare(ch, `exc-many`, `many-b`, []string{`key.b`})
+	s.NoError(err)
+
+	dec1 := make(chan *amqp.Delivery, 2)
+	dec2 := make(chan *amqp.Delivery, 1)
+
+	sleepTime := time.Millisecond * 500
+	checkTime := time.Millisecond * 600
+
+	subs := []SubscribeInfo{
+		{
+			Workers: 2,
+			Q:       `many-a`,
+			Key:     `key.a`,
+			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
+				return nil, nil
+			},
+			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
+				s.Equal(delivery.RoutingKey, `key.a`)
+				time.Sleep(sleepTime)
+				dec1 <- delivery
+				return nil, nil
+			},
+			Enc: EncodeJSONResponse,
+			O:   []SubscriberOption{SubscriberAfter(SetAckAfterEndpoint(true))},
+		},
+		{
+			Q:   `many-b`,
+			Key: `key.b`,
+			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
+				return nil, nil
+			},
+			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
+				s.Equal(delivery.RoutingKey, `key.b`)
+				time.Sleep(sleepTime)
+				dec2 <- delivery
+				return nil, nil
+			},
+			Enc: EncodeJSONResponse,
+			O:   []SubscriberOption{SubscriberAfter(SetAckAfterEndpoint(true))},
+		},
+	}
+
+	ser := NewServer(subs, s.conn)
+	err = ser.Serve()
+	s.NoError(err)
+
+	ch, err = s.conn.Channel()
+	s.NoError(err)
+	pub := NewPublisher(ch)
+
+	err = pub.Publish("exc-many", "key.a", "", []byte(`{"fa1":"b1"}`))
+	s.NoError(err)
+
+	err = pub.Publish("exc-many", "key.b", "", []byte(`{"fb1":"b1"}`))
+	s.NoError(err)
+
+	err = pub.Publish("exc-many", "key.a", "", []byte(`{"fa1":"b2"}`))
+	s.NoError(err)
+
+	var ca, cb int
+
+	t := time.After(checkTime)
+
+	for {
+		select {
+		case <-dec1:
+			ca++
+		case <-dec2:
+			cb++
+		case <-t:
+			s.Equal(2, ca)
+			s.Equal(1, cb)
+			return
+		}
 	}
 }

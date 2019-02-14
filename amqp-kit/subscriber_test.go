@@ -22,7 +22,7 @@ type subsSuite struct {
 func (s *subsSuite) SetupSuite() {
 	var err error
 	s.dsn = MakeDsn(&Config{
-		Address:  "127.0.0.1:5672",
+		Address:  rabbitTestAddr,
 		User:     "guest",
 		Password: "guest"},
 	)

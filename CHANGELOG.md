@@ -1,8 +1,13 @@
 # Changelog
 
-## [2.5.0] - 2018-11-23
+## [2.6.0] - 2018-11-23
 ### Change
 - added Workers as param for amqp_kit.SubscribeInfo
+=======
+
+##  [2.5.0] - 2019-02-12
+### Add
+- Tracing db wrapper
 
 ##  [2.4.0] - 2019-02-11
 ### Add

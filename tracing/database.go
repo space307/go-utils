@@ -27,6 +27,11 @@ func (d *Database) GetExtDatabase() *database.Database {
 	return d.extDB
 }
 
+// Create tracing.Database from database instance
+func WrapDatabase(db *database.Database) *Database {
+	return &Database{extDB: db}
+}
+
 // Exec function with context and create tracing span
 func (d *Database) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	span, _ := d.createSpanFromContext(ctx, query)
