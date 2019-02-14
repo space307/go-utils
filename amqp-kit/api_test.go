@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	//rabbitTestAddr = "127.0.0.1:5672"
-	rabbitTestAddr = "172.17.0.2:5672"
+	rabbitTestAddr = "127.0.0.1:5672"
 )
 
 type apiSuite struct {
