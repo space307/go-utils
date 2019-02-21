@@ -1,5 +1,11 @@
 # Changelog
 
+
+## [2.7.0] - 2018-02-21
+### Change
+- re-factoring amqp_kit, removed Declare
+=======
+
 ## [2.6.0] - 2018-11-23
 ### Change
 - added Workers as param for amqp_kit.SubscribeInfo

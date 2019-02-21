@@ -12,28 +12,57 @@ import (
 
 type Publisher struct {
 	ch          Channel
+	conn        *amqp.Connection
 	ServiceName string
 }
 
 // NewPublisher constructs a usable Publisher for a single remote method.
-func NewPublisher(ch Channel) *Publisher {
-	return &Publisher{ch: ch}
+func NewPublisher(conn *amqp.Connection) (*Publisher, error) {
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+
+	pub := &Publisher{
+		ch:   ch,
+		conn: conn,
+	}
+
+	return pub, nil
 }
 
-func (p Publisher) Publish(exchange, key, corID string, body []byte) (err error) {
-	pub := amqp.Publishing{
+func (p *Publisher) send(exchange, key string, pub *amqp.Publishing) (err error) {
+
+	var ch *amqp.Channel
+
+	for try := 0; try < 3; try++ {
+		if err = p.ch.Publish(exchange, key, false, false, *pub); err == nil {
+			return
+		}
+		aerr, ok := err.(amqp.Error)
+		if !ok {
+			return
+		}
+		if aerr.Code != amqp.ChannelError {
+			return
+		}
+		if ch, err = p.conn.Channel(); err != nil {
+			return
+		}
+		p.ch = ch
+	}
+	return
+}
+
+func (p *Publisher) Publish(exchange, key, corID string, body []byte) (err error) {
+	msg := amqp.Publishing{
 		ContentType:   "application/json",
 		CorrelationId: corID,
 		Body:          body,
 		DeliveryMode:  amqp.Persistent,
 	}
-
-	err = p.ch.Publish(exchange, key, false, false, pub)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return p.send(exchange, key, &msg)
 }
 
 //publish message to AMQP with tracing and span context
@@ -59,5 +88,5 @@ func (p *Publisher) PublishWithTracing(ctx context.Context, exchange, key, corID
 		log.Printf("publish: error inject headers: %s", err)
 	}
 
-	return p.ch.Publish(exchange, key, false, false, msg)
+	return p.send(exchange, key, &msg)
 }

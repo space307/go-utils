@@ -16,6 +16,14 @@ type Channel interface {
 	Consume(queue, consumer string, autoAck, exclusive, noLocal, noWail bool, args amqp.Table) (<-chan amqp.Delivery, error)
 }
 
+// DecodeRequestFunc extracts a user-domain request object from
+// an AMQP Delivery object. It is designed to be used in AMQP Subscribers.
+type DecodeRequestFunc func(context.Context, *amqp.Delivery) (request interface{}, err error)
+
+// EncodeResponseFunc encodes the passed reponse object to
+// an AMQP channel for publishing. It is designed to be used in AMQP Subscribers
+type EncodeResponseFunc func(context.Context, *amqp.Delivery, Channel, *amqp.Publishing, interface{}) error
+
 // Subscriber wraps an endpoint and provides a handler for AMQP Delivery messages
 type Subscriber struct {
 	e            endpoint.Endpoint
@@ -25,15 +33,6 @@ type Subscriber struct {
 	after        []SubscriberResponseFunc
 	errorEncoder ErrorEncoder
 }
-
-// DecodeRequestFunc extracts a user-domain request object from
-// an AMQP Delivery object. It is designed to be used in AMQP Subscribers.
-type DecodeRequestFunc func(context.Context, *amqp.Delivery) (request interface{}, err error)
-
-// EncodeResponseFunc encodes the passed reponse object to
-// an AMQP channel for publishing. It is designed to be used in AMQP Subscribers
-type EncodeResponseFunc func(context.Context,
-	*amqp.Delivery, Channel, *amqp.Publishing, interface{}) error
 
 // NewSubscriber constructs a new subscriber, which provides a handler
 // for AMQP Delivery messages
@@ -77,6 +76,7 @@ func SubscriberErrorEncoder(ee ErrorEncoder) SubscriberOption {
 // It is strongly recommended to use *amqp.Channel as the
 // Channel interface implementation
 func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
+
 	return func(deliv *amqp.Delivery) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -115,7 +115,6 @@ func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
 			return
 		}
 	}
-
 }
 
 // EncodeJSONResponse marshals the response as JSON and sends the response
