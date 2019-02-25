@@ -48,21 +48,19 @@ func TestMetricsChainBuilder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.005"} 0.0`) {
-		t.Errorf("request latency is smaller than %f seconds", 0.005)
+	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.005"} 0`) {
+		t.Errorf("request latency is smaller than 0.005 seconds")
 	}
 
-	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.01"} 0.0`) {
-		t.Errorf("request latency is smaller than %f seconds", 0.01)
+	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.01"} 0`) {
+		t.Errorf("request latency is smaller than 0.01 seconds")
 	}
 
-	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.025"} 1.0`) {
-		t.Errorf("request latency is more than %f seconds", 0.025)
+	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.025"} 1`) {
+		t.Errorf("request latency is more than 0.025 seconds")
 	}
 
-	if !strings.Contains(string(metricsRespBody), `request_count{error="unknown",method="test_metrics",valid="unknown"} 1.0`) {
+	if !strings.Contains(string(metricsRespBody), `request_count{error="unknown",method="test_metrics",valid="unknown"} 1`) {
 		t.Errorf("request count is not equal to 1")
 	}
-
-	t.Log("metricsRespBody", string(metricsRespBody))
 }
