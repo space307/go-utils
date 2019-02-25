@@ -21,10 +21,20 @@ func TestMetricsChainBuilder(t *testing.T) {
 
 	httpHandler := metricsBuilder("test_metrics")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(15 * time.Millisecond)
+		w.Write([]byte("test is ok"))
 	}))
 
 	// Simulate HTTP request processing.
-	httpHandler.ServeHTTP(httptest.NewRecorder(), req)
+	handlerRespRecorder := httptest.NewRecorder()
+	httpHandler.ServeHTTP(handlerRespRecorder, req)
+	handlerRespBody, err := ioutil.ReadAll(handlerRespRecorder.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(handlerRespBody) != "test is ok" {
+		t.Errorf("handler response is invalid")
+	}
 
 	// Call metrics handler.
 	metricsRespRecorder := httptest.NewRecorder()
