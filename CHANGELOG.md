@@ -1,5 +1,9 @@
 # Changelog
 
+##  [2.6.0] - 2019-02-25
+### Add
+- Metrics HTTP handler middleware
+
 ##  [2.5.0] - 2019-02-12
 ### Add
 - Tracing db wrapper
