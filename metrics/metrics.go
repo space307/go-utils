@@ -89,3 +89,21 @@ func MetricsMiddleware(m *MetricsStorage, method string) endpoint.Middleware {
 		}
 	}
 }
+
+// Returns a function which generates metrics http handler middleware.
+// It is useful for alice chains (see https://github.com/justinas/alice).
+func MetricsChainBuilder(m *MetricsStorage) func(method string) func(handler http.Handler) http.Handler {
+	return func(method string) func(handler http.Handler) http.Handler {
+		return func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				defer func(begin time.Time) {
+					labels := []string{`method`, method}
+					m.counterAdd(labels)
+					m.latencyAdd(labels, begin)
+				}(time.Now())
+
+				next.ServeHTTP(w, r)
+			})
+		}
+	}
+}
