@@ -44,7 +44,7 @@ func TestMetricsChainBuilder(t *testing.T) {
 	}
 
 	if !strings.Contains(string(metricsRespBody), `request_latency_ms_bucket{error="unknown",method="test_metrics",le="0.025"} 1.0`) {
-		t.Errorf("request latency is smaller than %f seconds", 0.025)
+		t.Errorf("request latency is more than %f seconds", 0.025)
 	}
 
 	if !strings.Contains(string(metricsRespBody), `request_count{error="unknown",method="test_metrics",valid="unknown"} 1.0`) {
