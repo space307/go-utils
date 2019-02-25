@@ -21,7 +21,10 @@ func TestMetricsChainBuilder(t *testing.T) {
 
 	httpHandler := metricsBuilder("test_metrics")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(15 * time.Millisecond)
-		w.Write([]byte("test is ok"))
+		_, err = w.Write([]byte("test is ok"))
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 
 	// Simulate HTTP request processing.
@@ -60,4 +63,6 @@ func TestMetricsChainBuilder(t *testing.T) {
 	if !strings.Contains(string(metricsRespBody), `request_count{error="unknown",method="test_metrics",valid="unknown"} 1.0`) {
 		t.Errorf("request count is not equal to 1")
 	}
+
+	t.Log("metricsRespBody", string(metricsRespBody))
 }
