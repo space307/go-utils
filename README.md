@@ -83,8 +83,6 @@ Implementation JSONFormatter of [logrus](https://github.com/sirupsen/logrus) wit
 
 AMQP wrapper in go-kit style
 
-see test example for use: [publisher_test.go](https://github.com/space307/go-utils/blob/master/amqp-kit/publisher_test.go)
-
 <a name="consul" />
 
 ### 12. consul

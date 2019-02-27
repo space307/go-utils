@@ -217,7 +217,7 @@ func TestVaultClient_Encrypt(t *testing.T) {
 func testVaultServer(t testing.TB) (*api.Client, func()) {
 	var err error
 
-	os.Setenv(api.EnvVaultInsecure, "true")
+	os.Setenv(api.EnvVaultSkipVerify, "true")
 
 	coreConfig := &vault.CoreConfig{
 		DisableMlock: true,

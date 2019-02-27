@@ -2,6 +2,7 @@ package amqp_kit
 
 import (
 	"context"
+	"github.com/prometheus/common/log"
 	"net/http"
 	"testing"
 	"time"
@@ -35,16 +36,11 @@ func TestErrorWithCode_Error(t *testing.T) {
 
 type errSuite struct {
 	suite.Suite
-	dsn string
+	config *Config
 }
 
 func (s *errSuite) SetupSuite() {
-	s.dsn = MakeDsn(&Config{
-		rabbitTestAddr,
-		"guest",
-		"guest",
-		"",
-	})
+	s.config = &Config{Address: rabbitTestAddr, User: "guest", Password: "guest"}
 }
 
 func (s *errSuite) TearDownSuite() {}
@@ -54,24 +50,13 @@ func TestErrSuite(t *testing.T) {
 }
 
 func (s *errSuite) TestErrResponse() {
-	conn, err := amqp.Dial(s.dsn)
-	s.Require().NoError(err)
-
-	ch, err := conn.Channel()
-	s.Require().NoError(err)
-
-	err = Declare(ch, `test`, `test`,
-		[]string{`key.request.test`, `key.request-err.test`, `key.response.test`})
-	s.Require().NoError(err)
-
 	dec1 := make(chan *amqp.Delivery)
 	dec2 := make(chan *amqp.Delivery)
 
 	subs := []SubscribeInfo{
 		{
-			Q:    `test`,
-			Name: ``,
-			Key:  `key.request.test`,
+			Queue:       `request`,
+			SubExchange: `error`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				res := Response{
 					Data: struct {
@@ -81,7 +66,7 @@ func (s *errSuite) TestErrResponse() {
 				return res, nil
 			},
 			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
-				s.Require().Equal(delivery.RoutingKey, `key.request.test`)
+				s.Require().Equal(delivery.RoutingKey, `request`)
 				dec1 <- delivery
 
 				return delivery.Body, nil
@@ -92,20 +77,19 @@ func (s *errSuite) TestErrResponse() {
 					SetAckAfterEndpoint(false),
 				),
 				SubscriberBefore(
-					SetPublishExchange(`test`),
-					SetPublishKey(`key.response.test`),
+					SetPublishExchange(`error`),
+					SetPublishKey(`response`),
 				),
 			},
 		},
 		{
-			Q:    `test`,
-			Name: ``,
-			Key:  `key.request-err.test`,
+			Queue:       `request_err`,
+			SubExchange: `error`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, NewError(`err-message`, `err_message`, http.StatusBadRequest)
 			},
 			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
-				s.Require().Equal(delivery.RoutingKey, `key.request-err.test`)
+				s.Require().Equal(delivery.RoutingKey, `request.err`)
 				return delivery.Body, nil
 			},
 			Enc: EncodeJSONResponse,
@@ -114,20 +98,19 @@ func (s *errSuite) TestErrResponse() {
 					SetAckAfterEndpoint(false),
 				),
 				SubscriberBefore(
-					SetPublishExchange(`test`),
-					SetPublishKey(`key.response.test`),
+					SetPublishExchange(`error`),
+					SetPublishKey(`response`),
 				),
 			},
 		},
 		{
-			Q:    `test`,
-			Name: ``,
-			Key:  `key.response.test`,
+			Queue:       `response`,
+			SubExchange: `error`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
 			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
-				s.Equal(delivery.RoutingKey, `key.response.test`)
+				s.Equal(delivery.RoutingKey, `response`)
 				dec2 <- delivery
 
 				return delivery.Body, nil
@@ -141,14 +124,15 @@ func (s *errSuite) TestErrResponse() {
 		},
 	}
 
-	ser := NewServer(subs, conn)
-
-	err = ser.Serve()
+	cl, err := New(subs, s.config)
 	s.Require().NoError(err)
 
-	pub := NewPublisher(ch)
-	err = pub.Publish("test", "key.request.test", `cor_1`, []byte(`{"f":"b"}`))
-	s.NoError(err)
+	err = cl.Serve()
+	s.Require().NoError(err)
+	time.Sleep(5 * time.Second)
+
+	err = cl.Publish("error", "request", `cor_1`, []byte(`{"f":"b"}`))
+	s.Require().NoError(err)
 
 	select {
 	case d := <-dec1:
@@ -164,7 +148,7 @@ func (s *errSuite) TestErrResponse() {
 		s.Fail("timeout. waiting answer on dec2")
 	}
 
-	err = pub.Publish("test", "key.request-err.test", `cor_2`, []byte(`{"f":"b1"}`))
+	err = cl.Publish("error", "request.err", `cor_2`, []byte(`{"f":"b1"}`))
 	s.NoError(err)
 
 	select {
@@ -173,4 +157,6 @@ func (s *errSuite) TestErrResponse() {
 	case <-time.After(5 * time.Second):
 		s.Fail("timeout. waiting answer on dec2")
 	}
+
+	s.Require().NoError(cl.Close())
 }
