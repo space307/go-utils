@@ -9,10 +9,12 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
+
+
 )
 
 type RpcClient struct {
-	rpcClient *rpcclient.Client
+	*rpcclient.Client
 }
 
 
@@ -29,15 +31,11 @@ func NewRpcClient(cfg *rpcclient.ConnConfig) (*RpcClient, error) {
 		return nil, err
 	}
 
-	return &RpcClient{rpcClient: rpcClient}, nil
-}
-
-func (rc *RpcClient) Shutdown() {
-	rc.rpcClient.Shutdown()
+	return &RpcClient{ rpcClient}, nil
 }
 
 func (rc *RpcClient) GetNewAddress() (btcutil.Address, error) {
-	addr, err := rc.rpcClient.GetNewAddress("")
+	addr, err := rc.Client.GetNewAddress("")
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +52,7 @@ func (rc *RpcClient) CreateRawTransaction(address string, amount int64) (string,
 	replaceable := []byte("true")
 
 
-	resp, err := rc.rpcClient.RawRequest("createrawtransaction", []json.RawMessage{ inputs, outputs, lockTime, replaceable })
+	resp, err := rc.Client.RawRequest("createrawtransaction", []json.RawMessage{ inputs, outputs, lockTime, replaceable })
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -71,7 +69,7 @@ func (rc *RpcClient) CreateRawTransaction(address string, amount int64) (string,
 }
 
 func (rc *RpcClient) SendRawTransaction(tx *wire.MsgTx) (*chainhash.Hash, error) {
-	return rc.rpcClient.SendRawTransaction(tx, false)
+	return rc.Client.SendRawTransaction(tx, false)
 }
 
 func (rc *RpcClient) SignRawTransactionWithWallet(tx *wire.MsgTx) (*wire.MsgTx, bool, error) {
@@ -86,7 +84,7 @@ func (rc *RpcClient) SignRawTransactionWithWallet(tx *wire.MsgTx) (*wire.MsgTx, 
 		return nil, false, errors.WithStack(err)
 	}
 
-	resultJson, err := rc.rpcClient.RawRequest("signrawtransactionwithwallet", []json.RawMessage{jsonData})
+	resultJson, err := rc.Client.RawRequest("signrawtransactionwithwallet", []json.RawMessage{jsonData})
 	if err != nil {
 		return nil, false, errors.WithStack(err)
 	}
