@@ -27,4 +27,4 @@ apt_packages:
 before_script:
   - psql -c 'CREATE DATABASE db_test;' -U postgres
   - cp btc-rpc/btc_init.sh /
-  - /btc_init.sh
+  - /btc_init.sh &
