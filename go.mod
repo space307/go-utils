@@ -13,6 +13,7 @@ require (
 	github.com/opentracing/opentracing-go v1.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2
+	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/sirupsen/logrus v1.3.0
 	github.com/space307/go-utils v0.0.0-20190225132311-c0f6eeb63526
 	github.com/streadway/amqp v0.0.0-20181205114330-a314942b2fd9
