@@ -1,17 +1,16 @@
-module github.com/space307/go-utils
-
 require (
 	contrib.go.opencensus.io/exporter/ocagent v0.4.3 // indirect
 	github.com/Azure/azure-sdk-for-go v25.0.0+incompatible // indirect
 	github.com/Azure/go-autorest v11.4.0+incompatible // indirect
 	github.com/SAP/go-hdb v0.13.2 // indirect
 	github.com/SermoDigital/jose v0.9.2-0.20161205224733-f6df55f235c2 // indirect
-	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20190203032130-408505a5fba8 // indirect
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 // indirect
 	github.com/aws/aws-sdk-go v1.16.28 // indirect
 	github.com/boombuler/barcode v1.0.0 // indirect
 	github.com/briankassouf/jose v0.9.1 // indirect
+	github.com/btcsuite/btcd v0.0.0-20190213025234-306aecffea32
+	github.com/btcsuite/btcutil v0.0.0-20190207003914-4c204d697803
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/centrify/cloud-golang-sdk v0.0.0-20180119173102-7c97cc6fde16 // indirect
 	github.com/chrismalek/oktasdk-go v0.0.0-20181212195951-3430665dfaa0 // indirect
@@ -35,7 +34,6 @@ require (
 	github.com/go-ldap/ldap v3.0.1+incompatible // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/go-stomp/stomp v2.0.2+incompatible // indirect
 	github.com/gocql/gocql v0.0.0-20190204224311-252acab79f98 // indirect
 	github.com/gogo/protobuf v1.2.0 // indirect
@@ -55,10 +53,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.0 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.1 // indirect
 	github.com/hashicorp/go-version v1.1.0 // indirect
-	github.com/hashicorp/hil v0.0.0-20190129155652-59d7c1fee952 // indirect
-	github.com/hashicorp/net-rpc-msgpackrpc v0.0.0-20151116020338-a14192a58a69 // indirect
 	github.com/hashicorp/nomad v0.8.7 // indirect
-	github.com/hashicorp/raft-boltdb v0.0.0-20171010151810-6e5ba93211ea // indirect
 	github.com/hashicorp/serf v0.8.2 // indirect
 	github.com/hashicorp/vault v1.0.2
 	github.com/hashicorp/vault-plugin-auth-alicloud v0.0.0-20181109180636-f278a59ca3e8 // indirect
@@ -99,6 +94,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec // indirect
 	github.com/sirupsen/logrus v1.3.0
 	github.com/soheilhy/cmux v0.1.4 // indirect
+	github.com/space307/go-utils v1.1.1
 	github.com/streadway/amqp v0.0.0-20181205114330-a314942b2fd9
 	github.com/stretchr/testify v1.3.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
@@ -109,7 +105,6 @@ require (
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1 // indirect
-	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/api v0.1.0 // indirect
 	google.golang.org/grpc v1.18.0 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
@@ -124,3 +119,5 @@ require (
 	sigs.k8s.io/structured-merge-diff v0.0.0-20190130003954-e5e029740eb8 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
+
+module github.com/andboson/go-utils
