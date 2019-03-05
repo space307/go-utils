@@ -13,9 +13,8 @@
 8. [checker.go](#checker)
 9. [vault.go](#vault)
 10. [json_formatter.go](#formatter)
-11. [messagebus.go](#messagebus)
-12. [amqp-kit](#amqp-kit)
-13. [consul](#consul)
+11. [amqp-kit](#amqp-kit)
+12. [consul](#consul)
 
 <a name="debug" />
 
@@ -78,80 +77,14 @@ Helper for working with vault hashicorp
 
 Implementation JSONFormatter of [logrus](https://github.com/sirupsen/logrus) with supporting additional fields for output
 
-<a name="messagebus" />
-
-### 11. messagebus
-
-Handy wrapper for [amqp](https://github.com/streadway/amqp)
-Usage:
-
-```go
-package main
-
-import (
-	"flag"
-	"fmt"
-	"log"
-
-	"github.com/space307/go-utils/messagebus"
-)
-
-func main() {
-	var mode string
-
-	flag.StringVar(&mode, "mode", "", "a string var")
-	flag.Parse()
-
-	mb, err := messagebus.Dial("amqp://guest:guest@172.17.0.2:5672/")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer mb.Close()
-
-	handler := func(key string, body []byte) error {
-		log.Printf("[%s] %q", key, body)
-		return nil
-	}
-
-	var (
-		exchangeName = "test-exchange"
-		queueName    = "test-queue"
-	)
-
-	switch mode {
-	case "p":
-		mb.SetName("producer")
-
-		for i := 0; i < 5000; i++ {
-			if err := mb.Produce(exchangeName, fmt.Sprintf("test.%d", i), []byte(fmt.Sprintf("body-%d", i))); err != nil {
-				log.Printf("Produce error: %v", err)
-			}
-		}
-
-	case "c":
-		mb.SetName("consumer")
-
-		if err = mb.Consume(exchangeName, queueName, []string{"test.*", "foo.*"}, handler); err != nil {
-			log.Printf("%v", err)
-		}
-
-	default:
-	}
-}
-```
-
 <a name="amqp-kit" />
 
-### 12. amqp-kit
+### 11. amqp-kit
 
 AMQP wrapper in go-kit style
 
-see test example for use: [publisher_test.go](https://github.com/space307/go-utils/blob/master/amqp-kit/publisher_test.go)
-
-
 <a name="consul" />
 
-### 13. consul
+### 12. consul
 
 Consul package contains a wrapper for Consul API for simplicity registration a service in the local agent.
