@@ -1,6 +1,7 @@
 package amqp_kit
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -13,6 +14,11 @@ import (
 )
 
 const defaultReconnectAfterDuration = 2 * time.Second
+
+type Publisher interface {
+	Publish(exchange, key, corID string, body []byte) (err error)
+	PublishWithTracing(ctx context.Context, exchange, key, corID string, body []byte) (err error)
+}
 
 type Client struct {
 	conn           *connection
@@ -236,6 +242,21 @@ func (c *Client) send(exchange, key string, pub *amqp.Publishing) (err error) {
 	if err = channel.c.Publish(exchange, key, false, false, *pub); err != nil {
 		channel.err = err
 		return fmt.Errorf("AMQP: Exchange Publish err: %s", err.Error())
+	}
+
+	return nil
+}
+
+func (c *Client) Ping() error {
+	conn := c.getConnection()
+	ch, err := conn.amqpConn.Channel()
+	if err != nil {
+		return fmt.Errorf("AMQP: Channel create err: %s", err.Error())
+	}
+
+	err = ch.Close()
+	if err != nil {
+		return fmt.Errorf("AMQP: Channel close err: %s", err.Error())
 	}
 
 	return nil
