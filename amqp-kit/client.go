@@ -12,6 +12,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const defaultReconnectAfterDuration = 2 * time.Second
+
 type Client struct {
 	conn           *connection
 	connLock       sync.RWMutex
@@ -33,12 +35,13 @@ type SubscribeInfo struct {
 }
 
 type Config struct {
-	Address           string
-	User              string
-	Password          string
-	VirtualHost       string
-	ChannelPoolSize   int
-	ChannelRetryCount int
+	Address                string
+	User                   string
+	Password               string
+	VirtualHost            string
+	ChannelPoolSize        int
+	ChannelRetryCount      int
+	ReconnectAfterDuration time.Duration
 }
 
 func New(s []SubscribeInfo, cfg *Config) (*Client, error) {
@@ -100,7 +103,11 @@ func (c *Client) onCloseWithErr(conn *connection, err error) {
 		case <-c.stopClientChan:
 			return
 		default:
-			<-time.After(2 * time.Second)
+			afterDuration := c.config.ReconnectAfterDuration
+			if afterDuration.Seconds() == 0 {
+				afterDuration = defaultReconnectAfterDuration
+			}
+			<-time.After(afterDuration)
 			err = c.reconnect()
 			if err != nil {
 				log.Warnf("AMQP: reconnection err %v", err)
@@ -129,7 +136,7 @@ func (c *Client) Serve() (err error) {
 	log.Info(`subscribers checked`)
 
 	for _, sub := range subscribers {
-		for i := 1; i <= sub.Workers; i++ {
+		for i := 0; i < sub.Workers; i++ {
 			go func(si *SubscribeInfo) {
 				for {
 					select {

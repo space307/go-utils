@@ -37,23 +37,19 @@ func (p *pool) get() (*channel, error) {
 }
 
 func (p *pool) put(c *channel) {
-	if c.err == nil {
-		select {
-		case p.ch <- c:
-		default:
-			c.close()
-		}
+	if c.err != nil {
+		return
+	}
+
+	select {
+	case p.ch <- c:
+	default:
+		c.close()
 	}
 }
 
 func (p *pool) empty() {
-	var c *channel
-	for {
-		select {
-		case c = <-p.ch:
-			c.close()
-		default:
-			return
-		}
+	for c := range p.ch {
+		c.close()
 	}
 }
