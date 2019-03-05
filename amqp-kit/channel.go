@@ -49,7 +49,13 @@ func (p *pool) put(c *channel) {
 }
 
 func (p *pool) empty() {
-	for c := range p.ch {
-		c.close()
+	var c *channel
+	for {
+		select {
+		case c = <-p.ch:
+			c.close()
+		default:
+			return
+		}
 	}
 }

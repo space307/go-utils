@@ -44,9 +44,8 @@ type Config struct {
 	ReconnectAfterDuration time.Duration
 }
 
-func New(s []SubscribeInfo, cfg *Config) (*Client, error) {
+func New(cfg *Config) (*Client, error) {
 	ser := &Client{
-		subs:           s,
 		config:         cfg,
 		stopClientChan: make(chan struct{}),
 	}
@@ -118,9 +117,9 @@ func (c *Client) onCloseWithErr(conn *connection, err error) {
 	}
 }
 
-func (c *Client) Serve() (err error) {
+func (c *Client) Serve(si []SubscribeInfo) (err error) {
 	subscribers := make(map[string]*SubscribeInfo)
-	for _, si := range c.subs {
+	for _, si := range si {
 		if _, ok := subscribers[si.Queue]; ok {
 			return fmt.Errorf("amqp_kit: duplicate queue entry: '%s' ", si.Queue)
 		}

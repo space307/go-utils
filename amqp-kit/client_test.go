@@ -69,10 +69,10 @@ func (s *apiSuite) TestServe() {
 		},
 	}
 
-	cl, err := New(subs, s.config)
+	cl, err := New(s.config)
 	s.Require().NoError(err)
 
-	err = cl.Serve()
+	err = cl.Serve(subs)
 	s.Require().NoError(err)
 	time.Sleep(5 * time.Second)
 
@@ -98,10 +98,10 @@ func (s *apiSuite) TestServe() {
 	s.Require().NoError(err)
 
 	// ---
-	cl, err = New(subs1, &Config{Address: rabbitTestAddr, User: "guest", Password: "guest"})
+	cl, err = New(&Config{Address: rabbitTestAddr, User: "guest", Password: "guest"})
 	s.Require().NoError(err)
 
-	err = cl.Serve()
+	err = cl.Serve(subs1)
 	s.Require().NoError(err)
 	time.Sleep(5 * time.Second)
 
@@ -161,10 +161,10 @@ func (s *apiSuite) TestDuplicateQueue() {
 		},
 	}
 
-	cl, err := New(subs, s.config)
+	cl, err := New(s.config)
 	s.Require().NoError(err)
 
-	err = cl.Serve()
+	err = cl.Serve(subs)
 	s.EqualError(err, fmt.Errorf("amqp_kit: duplicate queue entry: '%s' ", `dup`).Error())
 }
 
@@ -209,10 +209,10 @@ func (s *apiSuite) TestServeMany() {
 		},
 	}
 
-	cl, err := New(subs, &Config{Address: rabbitTestAddr, User: "guest", Password: "guest"})
+	cl, err := New(&Config{Address: rabbitTestAddr, User: "guest", Password: "guest"})
 	s.Require().NoError(err)
 
-	err = cl.Serve()
+	err = cl.Serve(subs)
 	s.Require().NoError(err)
 	time.Sleep(5 * time.Second)
 

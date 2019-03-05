@@ -123,10 +123,10 @@ func (s *errSuite) TestErrResponse() {
 		},
 	}
 
-	cl, err := New(subs, s.config)
+	cl, err := New(s.config)
 	s.Require().NoError(err)
 
-	err = cl.Serve()
+	err = cl.Serve(subs)
 	s.Require().NoError(err)
 	time.Sleep(5 * time.Second)
 

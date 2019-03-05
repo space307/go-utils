@@ -66,8 +66,8 @@ func (s *subsSuite) TestSubscriberTracing() {
 		},
 	}
 
-	cl, err := New(subs, s.config)
-	err = cl.Serve()
+	cl, err := New(s.config)
+	err = cl.Serve(subs)
 	s.Require().NoError(err)
 	time.Sleep(5 * time.Second)
 
