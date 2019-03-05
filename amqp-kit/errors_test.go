@@ -2,7 +2,6 @@ package amqp_kit
 
 import (
 	"context"
-	"github.com/prometheus/common/log"
 	"net/http"
 	"testing"
 	"time"
