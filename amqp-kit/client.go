@@ -15,11 +15,13 @@ import (
 
 const defaultReconnectAfterDuration = 2 * time.Second
 
+// Publisher interface use for publish amqp - message
 type Publisher interface {
-	Publish(exchange, key, corID string, body []byte) (err error)
-	PublishWithTracing(ctx context.Context, exchange, key, corID string, body []byte) (err error)
+	Publish(exchange, key, corID string, body []byte) error
+	PublishWithTracing(ctx context.Context, exchange, key, corID string, body []byte) error
 }
 
+// Client struct contains amqp - connection/reconnection and methods for pub/sub amqp message
 type Client struct {
 	conn           *connection
 	connLock       sync.RWMutex
@@ -28,6 +30,7 @@ type Client struct {
 	stopClientChan chan struct{}
 }
 
+// SubscriberInfo struct use for describe consumer for amqp
 type SubscribeInfo struct {
 	Name     string
 	Queue    string
@@ -40,6 +43,7 @@ type SubscribeInfo struct {
 	O        []SubscriberOption
 }
 
+// Config struct initialize config for Client struct
 type Config struct {
 	Address                string
 	User                   string
@@ -57,7 +61,7 @@ func New(cfg *Config) (*Client, error) {
 		stopClientChan: make(chan struct{}),
 	}
 
-	return ser, ser.init()
+	return ser, ser.reconnect()
 }
 
 // MakeDsn - creates dsn from config
@@ -68,15 +72,6 @@ func MakeDsn(c *Config) string {
 
 func (si *SubscribeInfo) keyName() string {
 	return strings.Replace(si.Queue, "_", ".", -1)
-}
-
-func (c *Client) init() error {
-	err := c.reconnect()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *Client) reconnect() error {
@@ -101,18 +96,18 @@ func (c *Client) getConnection() *connection {
 }
 
 func (c *Client) onCloseWithErr(conn *connection, err error) {
-
 	log.Warnf("AMQP: connection closed, err %v", err)
+
+	afterDuration := c.config.ReconnectAfterDuration
+	if afterDuration == 0 {
+		afterDuration = defaultReconnectAfterDuration
+	}
 
 	for {
 		select {
 		case <-c.stopClientChan:
 			return
 		default:
-			afterDuration := c.config.ReconnectAfterDuration
-			if afterDuration.Seconds() == 0 {
-				afterDuration = defaultReconnectAfterDuration
-			}
 			<-time.After(afterDuration)
 			err = c.reconnect()
 			if err != nil {
@@ -124,6 +119,7 @@ func (c *Client) onCloseWithErr(conn *connection, err error) {
 	}
 }
 
+// Server start consumers and listen amqp - messages
 func (c *Client) Serve(si []SubscribeInfo) (err error) {
 	subscribers := make(map[string]*SubscribeInfo)
 	for _, si := range si {
@@ -199,6 +195,7 @@ func (c *Client) receive(si *SubscribeInfo) error {
 	}
 }
 
+// DeclareAndBind create exchange, queue and create bind by key
 func DeclareAndBind(ch *amqp.Channel, exchange, queue, key string, qos int) error {
 	err := ch.ExchangeDeclare(exchange, "topic", true, false, false, false, nil)
 	if err != nil {
@@ -214,15 +211,11 @@ func DeclareAndBind(ch *amqp.Channel, exchange, queue, key string, qos int) erro
 		return err
 	}
 
-	if err := ch.QueueBind(queue, key, exchange, false, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return ch.QueueBind(queue, key, exchange, false, nil)
 }
 
 // Publish publishing some message to given exchange with key and correlationID
-func (c *Client) Publish(exchange, key, corID string, body []byte) (err error) {
+func (c *Client) Publish(exchange, key, corID string, body []byte) error {
 	pub := amqp.Publishing{
 		ContentType:   "application/json",
 		CorrelationId: corID,
@@ -233,7 +226,7 @@ func (c *Client) Publish(exchange, key, corID string, body []byte) (err error) {
 	return c.send(exchange, key, &pub)
 }
 
-func (c *Client) send(exchange, key string, pub *amqp.Publishing) (err error) {
+func (c *Client) send(exchange, key string, pub *amqp.Publishing) error {
 	// add retry
 	conn := c.getConnection()
 	channel, err := conn.getChan()
@@ -250,12 +243,14 @@ func (c *Client) send(exchange, key string, pub *amqp.Publishing) (err error) {
 	return nil
 }
 
+// GetAMQPConnection get simple amqp.Connection
 func (c *Client) GetAMQPConnection() *amqp.Connection {
 	conn := c.getConnection()
 
 	return conn.amqpConn
 }
 
+// Ping is health - check for amqp connection
 func (c *Client) Ping() error {
 	conn := c.getConnection()
 	ch, err := conn.amqpConn.Channel()

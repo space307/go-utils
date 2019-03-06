@@ -48,7 +48,7 @@ func (p *pool) put(c *channel) {
 	}
 }
 
-func (p *pool) empty() {
+func (p *pool) clear() {
 	var c *channel
 	for {
 		select {

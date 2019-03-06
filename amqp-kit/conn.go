@@ -25,7 +25,6 @@ type connection struct {
 func newConnection(config *Config, closeHandler connectionCloseHandler) *connection {
 	conn := &connection{
 		config:       config,
-		poolLock:     sync.RWMutex{},
 		closeHandler: closeHandler,
 	}
 	return conn
@@ -52,7 +51,7 @@ func (c *connection) connect() error {
 		e := <-notifyChan
 		log.Errorf(`err notify: %s`, e)
 		// clear pool
-		c.emptyPool()
+		c.clearPool()
 		// init new connection
 		c.closeHandler.onCloseWithErr(c, e)
 	}()
@@ -95,17 +94,17 @@ func (c *connection) putChan(channel *channel) {
 	}
 }
 
-func (c *connection) emptyPool() {
+func (c *connection) clearPool() {
 	c.poolLock.Lock()
 	defer c.poolLock.Unlock()
 
-	c.pool.empty()
+	c.pool.clear()
 }
 
 func (c *connection) close() error {
 	c.poolLock.Lock()
 	defer c.poolLock.Unlock()
 
-	c.pool.empty()
+	c.pool.clear()
 	return c.amqpConn.Close()
 }
