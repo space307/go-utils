@@ -250,6 +250,12 @@ func (c *Client) send(exchange, key string, pub *amqp.Publishing) (err error) {
 	return nil
 }
 
+func (c *Client) GetAMQPConnection() *amqp.Connection {
+	conn := c.getConnection()
+
+	return conn.amqpConn
+}
+
 func (c *Client) Ping() error {
 	conn := c.getConnection()
 	ch, err := conn.amqpConn.Channel()
