@@ -180,19 +180,11 @@ func (c *Client) receive(si *SubscribeInfo) error {
 	}
 	fun := NewSubscriber(si.E, si.Dec, si.Enc, si.O...).ServeDelivery(ch.c)
 
-	var d amqp.Delivery
-	var ok bool
-
-	for {
-		select {
-		case d, ok = <-msgs:
-		}
-		if !ok {
-			return fmt.Errorf(" Close channel error ")
-		}
-
+	for d := range msgs {
 		fun(&d)
 	}
+
+	return fmt.Errorf(" Close channel error ")
 }
 
 // DeclareAndBind create exchange, queue and create bind by key
