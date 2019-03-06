@@ -108,7 +108,7 @@ func (c *Client) onCloseWithErr(conn *connection, err error) {
 		case <-c.stopClientChan:
 			return
 		default:
-			<-time.After(afterDuration)
+			time.Sleep(afterDuration)
 			err = c.reconnect()
 			if err != nil {
 				log.Warnf("AMQP: reconnection err %v", err)
