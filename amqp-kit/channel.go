@@ -1,6 +1,9 @@
 package amqp_kit
 
-import "github.com/streadway/amqp"
+import (
+	log "github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
+)
 
 type pool struct {
 	ch chan *channel
@@ -13,8 +16,8 @@ type channel struct {
 }
 
 func (c *channel) close() {
-	if c != nil && c.c != nil {
-		c.c.Close()
+	if err := c.c.Close(); err != nil {
+		log.Errorf(`Close channel err: %s`, err)
 	}
 }
 
