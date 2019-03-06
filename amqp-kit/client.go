@@ -119,7 +119,7 @@ func (c *Client) onCloseWithErr(conn *connection, err error) {
 	}
 }
 
-// Server start consumers and listen amqp - messages
+// Serve start consumers and listen amqp - messages
 func (c *Client) Serve(si []SubscribeInfo) (err error) {
 	subscribers := make(map[string]*SubscribeInfo)
 	for _, si := range si {
