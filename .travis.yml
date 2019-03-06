@@ -9,6 +9,7 @@ services:
   - mysql
   - postgresql
   - rabbitmq
+  - docker
 
 env:
 - CONSUL_VERSION=1.4.2
@@ -17,14 +18,8 @@ before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS db_test;'
   - curl -sLo consul.zip https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
   - unzip consul.zip -d $HOME/bin
-  - sudo apt-add-repository ppa:bitcoin/bitcoin -y
-  - sudo apt-get update -qqmoving
-  - sudo apt-get install bitcoind -y
-
-apt_packages:
-  - bitcoind
+  - docker run -it -d -p8332:8332 -p8334:8334 -eRPCUSER=admin -eRPCPASSWORD=123456 andboson/bitcoin-test:dev
+  - docker ps -a
 
 before_script:
   - psql -c 'CREATE DATABASE db_test;' -U postgres
-  - cp btc-rpc/btc_init.sh /
-  - /btc_init.sh &

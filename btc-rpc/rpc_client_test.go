@@ -23,7 +23,7 @@ func TestNewRpcClient(t *testing.T) {
 	assert.Nil(t, client)
 
 	cfg.Pass = "123456"
-	cfg.User = "pilotuser"
+	cfg.User = "admin"
 	cfg.Host = "localhost:8332"
 	cfg.DisableTLS = true
 	cfg.HTTPPostMode = true
@@ -32,13 +32,13 @@ func TestNewRpcClient(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = client.rpcClient.Ping()
-	assert.Nilf(t, err, "error: %s", err)
+	assert.Nilf(t, err, "error: -- %s", err)
 }
 
 func TestSend(t *testing.T) {
 	cfg := &rpcclient.ConnConfig{}
 	cfg.Pass = "123456"
-	cfg.User = "pilotuser"
+	cfg.User = "admin"
 	cfg.Host = "localhost:8332"
 	cfg.DisableTLS = true
 	cfg.HTTPPostMode = true
