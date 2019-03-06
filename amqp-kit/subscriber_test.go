@@ -36,8 +36,8 @@ func (s *subsSuite) TestSubscriberTracing() {
 	dec1 := make(chan []byte)
 	subs := []SubscribeInfo{
 		{
-			Queue:       `test`,
-			SubExchange: `subscriber-test`,
+			Queue:    `test`,
+			Exchange: `subscriber-test`,
 			E: endpoint.Chain(
 				TraceEndpoint(tracer, `test_endpoint`),
 			)(func(ctx context.Context, request interface{}) (response interface{}, err error) {

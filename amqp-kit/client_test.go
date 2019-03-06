@@ -37,8 +37,8 @@ func (s *apiSuite) TestServe() {
 
 	subs := []SubscribeInfo{
 		{
-			Queue:       `test_a`,
-			SubExchange: `exc`,
+			Queue:    `test_a`,
+			Exchange: `exc`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
@@ -54,8 +54,8 @@ func (s *apiSuite) TestServe() {
 
 	subs1 := []SubscribeInfo{
 		{
-			Queue:       `test_b`,
-			SubExchange: `exc`,
+			Queue:    `test_b`,
+			Exchange: `exc`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
@@ -138,8 +138,8 @@ func (s *apiSuite) TestServe() {
 func (s *apiSuite) TestDuplicateQueue() {
 	subs := []SubscribeInfo{
 		{
-			Queue:       `dup`,
-			SubExchange: `exc`,
+			Queue:    `dup`,
+			Exchange: `exc`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
@@ -149,8 +149,8 @@ func (s *apiSuite) TestDuplicateQueue() {
 			Enc: EncodeJSONResponse,
 		},
 		{
-			Queue:       `dup`,
-			SubExchange: `exc`,
+			Queue:    `dup`,
+			Exchange: `exc`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
@@ -177,9 +177,9 @@ func (s *apiSuite) TestServeMany() {
 
 	subs := []SubscribeInfo{
 		{
-			Workers:     2,
-			Queue:       `many_a`,
-			SubExchange: `exc-many`,
+			Workers:  2,
+			Queue:    `many_a`,
+			Exchange: `exc-many`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
@@ -193,8 +193,8 @@ func (s *apiSuite) TestServeMany() {
 			O:   []SubscriberOption{SubscriberAfter(SetAckAfterEndpoint(true))},
 		},
 		{
-			Queue:       `many_b`,
-			SubExchange: `exc-many`,
+			Queue:    `many_b`,
+			Exchange: `exc-many`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},

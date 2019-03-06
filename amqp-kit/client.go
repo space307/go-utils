@@ -29,15 +29,15 @@ type Client struct {
 }
 
 type SubscribeInfo struct {
-	Name        string
-	Queue       string
-	Workers     int
-	SubExchange string
-	PubExchange string
-	E           endpoint.Endpoint
-	Dec         DecodeRequestFunc
-	Enc         EncodeResponseFunc
-	O           []SubscriberOption
+	Name     string
+	Queue    string
+	Key      string
+	Exchange string
+	Workers  int
+	E        endpoint.Endpoint
+	Dec      DecodeRequestFunc
+	Enc      EncodeResponseFunc
+	O        []SubscriberOption
 }
 
 type Config struct {
@@ -50,6 +50,7 @@ type Config struct {
 	ReconnectAfterDuration time.Duration
 }
 
+// New AMQP Client with connection
 func New(cfg *Config) (*Client, error) {
 	ser := &Client{
 		config:         cfg,
@@ -65,7 +66,7 @@ func MakeDsn(c *Config) string {
 	return u.String()
 }
 
-func (si *SubscribeInfo) KeyName() string {
+func (si *SubscribeInfo) keyName() string {
 	return strings.Replace(si.Queue, "_", ".", -1)
 }
 
@@ -135,10 +136,12 @@ func (c *Client) Serve(si []SubscribeInfo) (err error) {
 			s.Workers = 1
 		}
 
+		if s.Key == "" {
+			s.Key = s.keyName()
+		}
+
 		subscribers[si.Queue] = &s
 	}
-
-	log.Info(`subscribers checked`)
 
 	for _, sub := range subscribers {
 		for i := 0; i < sub.Workers; i++ {
@@ -147,7 +150,7 @@ func (c *Client) Serve(si []SubscribeInfo) (err error) {
 					select {
 					case <-c.stopClientChan:
 						log.Errorf(`stop client chan receiver for q: %s, n: %s, sub_exchange: %s`, si.Queue,
-							si.Name, si.SubExchange)
+							si.Name, si.Exchange)
 						return
 					default:
 						if err := c.receive(si); err != nil {
@@ -171,7 +174,7 @@ func (c *Client) receive(si *SubscribeInfo) error {
 	}
 	defer conn.putChan(ch)
 
-	if err = DeclareAndBind(ch.c, si.SubExchange, si.Queue, si.KeyName(), 1); err != nil {
+	if err = DeclareAndBind(ch.c, si.Exchange, si.Queue, si.Key, 1); err != nil {
 		return fmt.Errorf("AMQP: Declare and bind err: %s", err.Error())
 	}
 

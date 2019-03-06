@@ -54,8 +54,8 @@ func (s *errSuite) TestErrResponse() {
 
 	subs := []SubscribeInfo{
 		{
-			Queue:       `request`,
-			SubExchange: `error`,
+			Queue:    `request`,
+			Exchange: `error`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				res := Response{
 					Data: struct {
@@ -82,8 +82,8 @@ func (s *errSuite) TestErrResponse() {
 			},
 		},
 		{
-			Queue:       `request_err`,
-			SubExchange: `error`,
+			Queue:    `request_err`,
+			Exchange: `error`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, NewError(`err-message`, `err_message`, http.StatusBadRequest)
 			},
@@ -103,8 +103,8 @@ func (s *errSuite) TestErrResponse() {
 			},
 		},
 		{
-			Queue:       `response`,
-			SubExchange: `error`,
+			Queue:    `response`,
+			Exchange: `error`,
 			E: func(ctx context.Context, request interface{}) (response interface{}, err error) {
 				return nil, nil
 			},
