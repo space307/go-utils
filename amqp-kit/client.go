@@ -181,6 +181,12 @@ func (c *Client) receive(si *SubscribeInfo) error {
 	fun := NewSubscriber(si.E, si.Dec, si.Enc, si.O...).ServeDelivery(ch.c)
 
 	for d := range msgs {
+		if si.Key != d.RoutingKey {
+			log.Errorf(`error routing key, expected: %s, real: %s`, si.Key, d.RoutingKey)
+			_ = d.Ack(false)
+			continue
+		}
+
 		fun(&d)
 	}
 
