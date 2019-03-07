@@ -1,5 +1,9 @@
 # Changelog
 
+##  [3.0.0] - 2019-03-05
+### Add / Update
+- AMQP - kit client
+
 ##  [2.6.0] - 2019-02-25
 ### Add
 - Metrics HTTP handler middleware

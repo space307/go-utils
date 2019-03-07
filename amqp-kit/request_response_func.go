@@ -2,13 +2,14 @@ package amqp_kit
 
 import (
 	"context"
+
 	"github.com/streadway/amqp"
 )
 
 // RequestFunc may take information from a publisher request and put it into a
 // request context. In Subscribers, RequestFuncs are executed prior to invoking
 // the endpoint.
-type RequestFunc func(context.Context, *amqp.Publishing) context.Context
+type RequestFunc func(context.Context, *amqp.Delivery, *amqp.Publishing) context.Context
 
 // SubscriberResponseFunc may take information from a request context and use it to
 // manipulate a Publisher. SubscriberResponseFuncs are only executed in
@@ -18,7 +19,7 @@ type SubscriberResponseFunc func(context.Context, *amqp.Delivery, Channel, *amqp
 // SetPublishExchange returns a RequestFunc that sets the Exchange field
 // of AMQP Publish call
 func SetPublishExchange(publishExchange string) RequestFunc {
-	return func(ctx context.Context, pub *amqp.Publishing,
+	return func(ctx context.Context, del *amqp.Delivery, pub *amqp.Publishing,
 	) context.Context {
 		return context.WithValue(ctx, ContextKeyExchange, publishExchange)
 	}
@@ -27,7 +28,7 @@ func SetPublishExchange(publishExchange string) RequestFunc {
 // SetPublishKey returns a RequestFunc that sets the Key field
 // of AMQP Publish call
 func SetPublishKey(publishKey string) RequestFunc {
-	return func(ctx context.Context, pub *amqp.Publishing,
+	return func(ctx context.Context, del *amqp.Delivery, pub *amqp.Publishing,
 	) context.Context {
 		return context.WithValue(ctx, ContextKeyPublishKey, publishKey)
 	}
@@ -36,8 +37,7 @@ func SetPublishKey(publishKey string) RequestFunc {
 // SetCorrelationID returns a RequestFunc that sets the CorrelationId field
 // of an AMQP Publishing
 func SetCorrelationID(cid string) RequestFunc {
-	return func(ctx context.Context, pub *amqp.Publishing,
-	) context.Context {
+	return func(ctx context.Context, del *amqp.Delivery, pub *amqp.Publishing) context.Context {
 		pub.CorrelationId = cid
 		return ctx
 	}
