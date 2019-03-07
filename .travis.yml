@@ -13,7 +13,6 @@ services:
 
 env:
 - CONSUL_VERSION=1.4.2
-- GO111MODULE=on
 
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS db_test;'
