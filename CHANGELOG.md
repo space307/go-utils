@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.0.1]
+### fix:
+- Serve method wait
+- New() method return nil - client if was error
+- go.mod release /v3 version
+
 ##  [3.0.0] - 2019-03-05
 ### Add / Update
 - AMQP - kit client

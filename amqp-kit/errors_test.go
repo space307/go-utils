@@ -128,7 +128,6 @@ func (s *errSuite) TestErrResponse() {
 
 	err = cl.Serve(subs)
 	s.Require().NoError(err)
-	time.Sleep(5 * time.Second)
 
 	err = cl.Publish("error", "request", `cor_1`, []byte(`{"f":"b"}`))
 	s.Require().NoError(err)

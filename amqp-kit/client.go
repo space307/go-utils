@@ -13,7 +13,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-const defaultReconnectAfterDuration = 2 * time.Second
+const defaultReconnectAfterDuration = 500 * time.Millisecond
 
 // Publisher interface use for publish amqp - message
 type Publisher interface {
@@ -61,7 +61,11 @@ func New(cfg *Config) (*Client, error) {
 		stopClientChan: make(chan struct{}),
 	}
 
-	return ser, ser.reconnect()
+	if err := ser.reconnect(); err != nil {
+		return nil, err
+	}
+
+	return ser, nil
 }
 
 // MakeDsn - creates dsn from config
@@ -139,7 +143,7 @@ func (c *Client) Serve(si []SubscribeInfo) (err error) {
 		subscribers[si.Queue] = &s
 	}
 
-	for _, sub := range subscribers {
+	for q, sub := range subscribers {
 		for i := 0; i < sub.Workers; i++ {
 			go func(si *SubscribeInfo) {
 				for {
@@ -157,9 +161,33 @@ func (c *Client) Serve(si []SubscribeInfo) (err error) {
 				}
 			}(sub)
 		}
+
+		t := time.Now().Add(5 * time.Second)
+		for {
+			conn := c.getConnection()
+			ch, err := conn.getChan()
+			if err != nil {
+				return fmt.Errorf("AMQP: Channel err: %s", err.Error())
+			}
+
+			if time.Now().After(t) {
+				return fmt.Errorf(`worker wait timeout`)
+			}
+
+			// the channel will be closed if error
+			qu, err := ch.c.QueueInspect(q)
+			if err != nil {
+				continue
+			}
+			conn.putChan(ch)
+
+			if qu.Consumers == sub.Workers {
+				break
+			}
+		}
 	}
 
-	return
+	return nil
 }
 
 func (c *Client) receive(si *SubscribeInfo) error {
@@ -176,7 +204,7 @@ func (c *Client) receive(si *SubscribeInfo) error {
 
 	msgs, err := ch.c.Consume(si.Queue, si.Name, false, false, false, false, nil)
 	if err != nil {
-		return fmt.Errorf(" Channel consume err: %s", err.Error())
+		return fmt.Errorf("Channel consume err: %s ", err.Error())
 	}
 	fun := NewSubscriber(si.E, si.Dec, si.Enc, si.O...).ServeDelivery(ch.c)
 
@@ -190,7 +218,7 @@ func (c *Client) receive(si *SubscribeInfo) error {
 		fun(&d)
 	}
 
-	return fmt.Errorf(" Close channel error ")
+	return fmt.Errorf("Close channel error ")
 }
 
 // DeclareAndBind create exchange, queue and create bind by key
