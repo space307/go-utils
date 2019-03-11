@@ -1,4 +1,4 @@
-module github.com/space307/go-utils
+module github.com/space307/go-utils/v3
 
 require (
 	contrib.go.opencensus.io/exporter/ocagent v0.4.3 // indirect
