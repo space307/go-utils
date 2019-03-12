@@ -1,6 +1,8 @@
 # Changelog
 
-## [3.0.1]
+## [3.1.1]
+### add:
+- WaitWorkerDuration config
 ### fix:
 - Serve method wait
 - New() method return nil - client if was error

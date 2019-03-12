@@ -14,6 +14,7 @@ import (
 )
 
 const defaultReconnectAfterDuration = 500 * time.Millisecond
+const defaultWaitWorkerDuration = 5 * time.Second
 
 // Publisher interface use for publish amqp - message
 type Publisher interface {
@@ -52,6 +53,7 @@ type Config struct {
 	ChannelPoolSize        int
 	ChannelRetryCount      int
 	ReconnectAfterDuration time.Duration
+	WaitWorkerDuration     time.Duration
 }
 
 // New AMQP Client with connection
@@ -143,6 +145,11 @@ func (c *Client) Serve(si []SubscribeInfo) (err error) {
 		subscribers[si.Queue] = &s
 	}
 
+	workerDuration := c.config.WaitWorkerDuration
+	if workerDuration == 0 {
+		workerDuration = defaultWaitWorkerDuration
+	}
+
 	for q, sub := range subscribers {
 		for i := 0; i < sub.Workers; i++ {
 			go func(si *SubscribeInfo) {
@@ -162,7 +169,7 @@ func (c *Client) Serve(si []SubscribeInfo) (err error) {
 			}(sub)
 		}
 
-		t := time.Now().Add(5 * time.Second)
+		t := time.Now().Add(workerDuration)
 		for {
 			conn := c.getConnection()
 			ch, err := conn.getChan()
