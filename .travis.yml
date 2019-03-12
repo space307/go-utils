@@ -11,7 +11,12 @@ services:
   - rabbitmq
 
 env:
-- CONSUL_VERSION=1.4.2
+  global:
+    - GO111MODULE=on
+  matrix:
+    - CONSUL_VERSION=1.4.2
+
+install: true
 
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS db_test;'

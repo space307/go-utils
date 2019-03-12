@@ -9,7 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/space307/go-utils/database"
+	"github.com/space307/go-utils/v3/database"
 	"github.com/stretchr/testify/suite"
 )
 

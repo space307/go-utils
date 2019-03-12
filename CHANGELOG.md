@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.1.2]
+### fix:
+- update go.mod imports
+
 ## [3.1.1]
 ### add:
 - WaitWorkerDuration config
