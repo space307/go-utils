@@ -74,7 +74,6 @@ func (s *apiSuite) TestServe() {
 
 	err = cl.Serve(subs)
 	s.Require().NoError(err)
-	time.Sleep(5 * time.Second)
 
 	err = cl.Publish("exc", "test.a 1", `cor_1`, []byte(`{"f1":"b1"}`))
 	s.Require().NoError(err)
@@ -103,7 +102,6 @@ func (s *apiSuite) TestServe() {
 
 	err = cl.Serve(subs1)
 	s.Require().NoError(err)
-	time.Sleep(5 * time.Second)
 
 	err = cl.Publish("exc", "test.b", `cor_3`, []byte(`{"f3":"b3"}`))
 	s.Require().NoError(err)
@@ -214,7 +212,6 @@ func (s *apiSuite) TestServeMany() {
 
 	err = cl.Serve(subs)
 	s.Require().NoError(err)
-	time.Sleep(5 * time.Second)
 
 	err = cl.Publish("exc-many", "many.a", "", []byte(`{"fa1":"b1"}`))
 	s.NoError(err)

@@ -69,7 +69,6 @@ func (s *subsSuite) TestSubscriberTracing() {
 	cl, err := New(s.config)
 	err = cl.Serve(subs)
 	s.Require().NoError(err)
-	time.Sleep(5 * time.Second)
 
 	// success
 	err = cl.PublishWithTracing(ctx, "subscriber-test", "test", `cor_1`, []byte(`{"f1":"b1"}`))

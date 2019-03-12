@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.1]
+### add:
+- WaitWorkerDuration config
+### fix:
+- Serve method wait
+- New() method return nil - client if was error
+- go.mod release /v3 version
+
 ##  [3.0.0] - 2019-03-05
 ### Add / Update
 - AMQP - kit client
