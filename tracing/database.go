@@ -7,7 +7,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/space307/go-utils/database"
+	"github.com/space307/go-utils/v3/database"
 )
 
 // Database is a object extended database.Database struct

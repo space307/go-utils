@@ -5,13 +5,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/space307/go-utils/metrics"
-
 	"github.com/go-kit/kit/endpoint"
 	kit_log "github.com/go-kit/kit/log"
 	opentrackingpkg "github.com/go-kit/kit/tracing/opentracing"
 	kit_http "github.com/go-kit/kit/transport/http"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/space307/go-utils/v3/metrics"
 )
 
 // AddMetrics is functions used to adds metrics and tracing middleware to all Handlers
