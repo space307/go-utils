@@ -268,6 +268,13 @@ func (c *Client) send(exchange, key string, pub *amqp.Publishing) error {
 	}
 	defer conn.putChan(channel)
 
+	// check for exchange exists
+	err = channel.c.ExchangeDeclarePassive(exchange, "topic", true, false, false, false, nil)
+	if err != nil {
+		channel.err = err
+		return err
+	}
+
 	if err = channel.c.Publish(exchange, key, false, false, *pub); err != nil {
 		channel.err = err
 		return fmt.Errorf("AMQP: Exchange Publish err: %s", err.Error())
