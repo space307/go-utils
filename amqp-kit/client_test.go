@@ -184,6 +184,8 @@ func (s *apiSuite) TestServeMany() {
 			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
 				s.Require().Equal(delivery.RoutingKey, `many.a`)
 				time.Sleep(sleepTime)
+				delivery.Ack(true)
+
 				dec1 <- delivery
 				return nil, nil
 			},
@@ -199,6 +201,7 @@ func (s *apiSuite) TestServeMany() {
 			Dec: func(i context.Context, delivery *amqp.Delivery) (request interface{}, err error) {
 				s.Require().Equal(delivery.RoutingKey, `many.b`)
 				time.Sleep(sleepTime)
+				delivery.Ack(true)
 				dec2 <- delivery
 				return nil, nil
 			},

@@ -29,6 +29,8 @@ type Client struct {
 	subs           []SubscribeInfo
 	config         *Config
 	stopClientChan chan struct{}
+	exchLock       sync.RWMutex
+	exchanges      map[string]error
 }
 
 // SubscriberInfo struct use for describe consumer for amqp
@@ -61,6 +63,7 @@ func New(cfg *Config) (*Client, error) {
 	ser := &Client{
 		config:         cfg,
 		stopClientChan: make(chan struct{}),
+		exchanges:      make(map[string]error),
 	}
 
 	if err := ser.reconnect(); err != nil {
@@ -269,8 +272,7 @@ func (c *Client) send(exchange, key string, pub *amqp.Publishing) error {
 	defer conn.putChan(channel)
 
 	// check for exchange exists
-	err = channel.c.ExchangeDeclarePassive(exchange, "topic", true, false, false, false, nil)
-	if err != nil {
+	if err = c.checkExchange(channel, exchange); err != nil {
 		channel.err = err
 		return err
 	}
@@ -317,4 +319,18 @@ func (c *Client) Close() error {
 	}
 
 	return nil
+}
+
+func (c *Client) checkExchange(channel *channel, exchange string) error {
+	c.exchLock.Lock()
+	defer c.exchLock.Unlock()
+
+	if err, ok := c.exchanges[exchange]; ok {
+		return err
+	}
+
+	err := channel.c.ExchangeDeclarePassive(exchange, "topic", true, false, false, false, nil)
+	c.exchanges[exchange] = err
+
+	return err
 }
