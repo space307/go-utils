@@ -213,6 +213,9 @@ func (s *apiSuite) TestServeMany() {
 	err = cl.Serve(subs)
 	s.Require().NoError(err)
 
+	// error
+	err = cl.Publish("not_exists_ex", "not.exists.key", "", []byte(`{"fa1":"b1"}`))
+
 	err = cl.Publish("exc-many", "many.a", "", []byte(`{"fa1":"b1"}`))
 	s.NoError(err)
 
