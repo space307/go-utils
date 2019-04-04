@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/opentracing-contrib/go-amqp/amqptracer"
+	"github.com/opentracing/opentracing-go"
+	logop "github.com/opentracing/opentracing-go/log"
 	"github.com/streadway/amqp"
 )
 
@@ -96,12 +98,18 @@ func (s Subscriber) ServeDelivery(ch Channel) func(deliv *amqp.Delivery) {
 		request, err := s.dec(ctx, deliv)
 		if err != nil {
 			s.errorEncoder(ctx, err, deliv, ch, &pub)
+			if span := opentracing.SpanFromContext(ctx); span != nil {
+				span.LogFields(logop.Error(err))
+			}
 			return
 		}
 
 		response, err := s.e(ctx, request)
 		if err != nil {
 			s.errorEncoder(ctx, err, deliv, ch, &pub)
+			if span := opentracing.SpanFromContext(ctx); span != nil {
+				span.LogFields(logop.Error(err))
+			}
 			return
 		}
 
