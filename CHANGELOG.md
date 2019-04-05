@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.1.3]- 2019-03-05
+### fix:
+- added auto-create exchange
+
 ## [3.1.2]
 ### fix:
 - update go.mod imports
