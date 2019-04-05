@@ -25,6 +25,6 @@ func TestOnceMap_Do(t *testing.T) {
 	wg.Wait()
 
 	if result != "01" && result != "10" {
-		t.Fail()
+		t.Errorf("result is %s", result)
 	}
 }
