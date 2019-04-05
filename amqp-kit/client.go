@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	syncutils "github.com/space307/go-utils/v3/sync"
+
 	"github.com/go-kit/kit/endpoint"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
@@ -30,8 +32,7 @@ type Client struct {
 	subs           []SubscribeInfo
 	config         *Config
 	stopClientChan chan struct{}
-	exchLock       sync.RWMutex
-	exchanges      map[string]struct{}
+	exchOnceMap    *syncutils.OnceMap
 }
 
 // SubscriberInfo struct use for describe consumer for amqp
@@ -64,7 +65,7 @@ func New(cfg *Config) (*Client, error) {
 	ser := &Client{
 		config:         cfg,
 		stopClientChan: make(chan struct{}),
-		exchanges:      make(map[string]struct{}),
+		exchOnceMap:    syncutils.NewOnceMap(),
 	}
 
 	if err := ser.reconnect(); err != nil {
@@ -322,19 +323,12 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) checkExchange(channel *channel, exchange string) error {
-	c.exchLock.Lock()
-	defer c.exchLock.Unlock()
-	if _, ok := c.exchanges[exchange]; ok {
-		return nil
-	}
+// Checks that exchange exists, and if not it trying to create exchange.
+// checkExchange declares new exchange only once during client lifetime.
+func (c *Client) checkExchange(channel *channel, exchange string) (err error) {
+	c.exchOnceMap.Do(exchange, func() {
+		err = channel.c.ExchangeDeclare(exchange, DefaultExchangeKind, true, false, false, false, nil)
+	})
 
-	err := channel.c.ExchangeDeclare(exchange, DefaultExchangeKind, true, false, false, false, nil)
-	if err != nil {
-		return err
-	}
-
-	c.exchanges[exchange] = struct{}{}
-
-	return nil
+	return
 }
