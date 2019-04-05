@@ -323,10 +323,9 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) checkExchange(channel *channel, exchange string) error {
-	c.exchLock.RLock()
-	_, exists := c.exchanges[exchange]
-	c.exchLock.RUnlock()
-	if exists {
+	c.exchLock.Lock()
+	defer c.exchLock.Unlock()
+	if _, ok := c.exchanges[exchange]; ok {
 		return nil
 	}
 
@@ -335,9 +334,7 @@ func (c *Client) checkExchange(channel *channel, exchange string) error {
 		return err
 	}
 
-	c.exchLock.Lock()
 	c.exchanges[exchange] = struct{}{}
-	c.exchLock.Unlock()
 
 	return nil
 }
