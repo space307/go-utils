@@ -31,6 +31,7 @@ func (o *OnceMap) Do(key string, f func()) {
 
 	v, ok = o.onceMap[key]
 	if ok && v != nil {
+		o.mu.Unlock()
 		return
 	}
 	once := &sync.Once{}
