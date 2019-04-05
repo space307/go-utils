@@ -14,15 +14,14 @@ func TestOnceMap_Do(t *testing.T) {
 	var mu sync.Mutex
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
-		go func() {
-			k := fmt.Sprintf("%d", i%2)
+		go func(k string) {
 			m.Do(k, func() {
 				mu.Lock()
 				result += k
 				mu.Unlock()
 			})
 			wg.Done()
-		}()
+		}(fmt.Sprint(i % 2))
 	}
 
 	wg.Wait()
