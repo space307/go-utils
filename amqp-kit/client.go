@@ -15,6 +15,7 @@ import (
 
 const defaultReconnectAfterDuration = 500 * time.Millisecond
 const defaultWaitWorkerDuration = 5 * time.Second
+const DefaultExchangeKind = "topic"
 
 // Publisher interface use for publish amqp - message
 type Publisher interface {
@@ -29,6 +30,8 @@ type Client struct {
 	subs           []SubscribeInfo
 	config         *Config
 	stopClientChan chan struct{}
+	exchLock       sync.RWMutex
+	exchanges      map[string]struct{}
 }
 
 // SubscriberInfo struct use for describe consumer for amqp
@@ -61,6 +64,7 @@ func New(cfg *Config) (*Client, error) {
 	ser := &Client{
 		config:         cfg,
 		stopClientChan: make(chan struct{}),
+		exchanges:      make(map[string]struct{}),
 	}
 
 	if err := ser.reconnect(); err != nil {
@@ -268,6 +272,12 @@ func (c *Client) send(exchange, key string, pub *amqp.Publishing) error {
 	}
 	defer conn.putChan(channel)
 
+	// create exchange if not exists
+	if err = c.checkExchange(channel, exchange); err != nil {
+		channel.err = err
+		return err
+	}
+
 	if err = channel.c.Publish(exchange, key, false, false, *pub); err != nil {
 		channel.err = err
 		return fmt.Errorf("AMQP: Exchange Publish err: %s", err.Error())
@@ -308,6 +318,23 @@ func (c *Client) Close() error {
 	if c.conn != nil {
 		return c.conn.close()
 	}
+
+	return nil
+}
+
+func (c *Client) checkExchange(channel *channel, exchange string) error {
+	c.exchLock.Lock()
+	defer c.exchLock.Unlock()
+	if _, ok := c.exchanges[exchange]; ok {
+		return nil
+	}
+
+	err := channel.c.ExchangeDeclare(exchange, DefaultExchangeKind, true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+
+	c.exchanges[exchange] = struct{}{}
 
 	return nil
 }
