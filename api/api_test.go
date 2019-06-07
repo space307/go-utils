@@ -114,3 +114,33 @@ func TestNewErrorWithCode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("null"), res)
 }
+
+func TestTimeouts(t *testing.T) {
+	a := assert.New(t)
+
+	testCases := []struct {
+		config             Config
+		expectReadTimeout  time.Duration
+		expectWriteTimeout time.Duration
+	}{
+		{
+			Config{},
+			10 * time.Second,
+			10 * time.Second,
+		},
+		{
+			Config{
+				ReadTimeout:  100500 * time.Second,
+				WriteTimeout: 500100 * time.Second,
+			},
+			100500 * time.Second,
+			500100 * time.Second,
+		},
+	}
+
+	for _, tc := range testCases {
+		server := NewServer(&tc.config)
+		a.Equal(tc.expectReadTimeout, server.server.ReadTimeout)
+		a.Equal(tc.expectWriteTimeout, server.server.WriteTimeout)
+	}
+}
