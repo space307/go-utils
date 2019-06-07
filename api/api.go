@@ -15,6 +15,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	cDefaultReadTimeout  = 10 * time.Second
+	cDefaultWriteTimeout = 10 * time.Second
+)
+
 // ErrorWithCode contains a message and code, which will be used as a http response code.
 type ErrorWithCode struct {
 	code     int
@@ -60,9 +65,10 @@ type PathInfo struct {
 
 // Config used to pass settings and handlers to the server.
 type Config struct {
-	Addr     string
-	Prefix   string
-	Handlers []PathInfo
+	Addr                      string
+	Prefix                    string
+	Handlers                  []PathInfo
+	ReadTimeout, WriteTimeout time.Duration
 }
 
 // Server is a REST api server.
@@ -82,11 +88,24 @@ func NewServer(cfg *Config) *Server {
 		router.Handle(s.Path, srv).Methods(s.Method)
 	}
 	s.m.Lock()
+
+	// override timeouts
+	readTimeout := cDefaultReadTimeout
+	writeTimeout := cDefaultWriteTimeout
+
+	if cfg.ReadTimeout > 0 {
+		readTimeout = cfg.ReadTimeout
+	}
+
+	if cfg.WriteTimeout > 0 {
+		writeTimeout = cfg.WriteTimeout
+	}
+
 	s.server = &http.Server{
 		Addr:           s.cfg.Addr,
 		Handler:        r,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 	s.m.Unlock()

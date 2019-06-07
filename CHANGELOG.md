@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.0]- 2019-06-06
+### add:
+- api config with timeouts
+
 ## [3.1.3]- 2019-03-05
 ### fix:
 - added auto-create exchange
